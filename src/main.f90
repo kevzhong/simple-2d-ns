@@ -30,9 +30,10 @@ program main
 
         ! call postpro
         ! call check
+        ! call writeField
         time = time + dt
         write(*,*) time
-        write(*,*) u
+        !write(*,*) u
     enddo
     !--------- End time-marching -------------------
 
