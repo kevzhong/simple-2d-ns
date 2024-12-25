@@ -50,13 +50,13 @@ subroutine build_rhsVelocity
     use velMemory
     implicit none
     integer :: i, k
-    real :: duudx, duwdz, dwudx, dwwdz, dpdx, dpdz
+    real :: duudx, duwdz, dwudx, dwwdz, nudd2_u, nudd2_w, dpdx, dpdz
 
     !$omp parallel do &
     !$omp default(none) &
     !$omp private(i,k) &
-    !$omp private(duudx,duwdz,dwudx,dwwdz,dpdx,dpdz) &
-    !$omp shared(Nx,Nz,dx,dz) &
+    !$omp private(duudx,duwdz,dwudx,dwwdz,nudd2_u,nudd2_w,dpdx,dpdz) &
+    !$omp shared(Nx,Nz,dx,dz,nu) &
     !$omp shared(u,w,p,rhs_u,rhs_w)
     do k = 1,Nz
         do i = 1,Nx
@@ -81,6 +81,10 @@ subroutine build_rhsVelocity
                     -(w(i,k)+w(i-1,k))*(u(i,k)+u(i,k-1)) &
                      ) / (4.0 * dz)      
 
+
+            ! d2u / dxj2
+            nudd2_u = nu * (  ( u(i-1,k) -2.0*u(i,k) + u(i+1,k)  ) / dx**2  + &
+                              ( u(i,k-1) -2.0*u(i,k) + u(i,k+1)  ) / dz**2 )
 
             ! dp/dx | i+1/2
              dpdx = ( -p(i-1,k) + p(i,k) ) / dx
@@ -107,6 +111,10 @@ subroutine build_rhsVelocity
                     -((u(i,k)+u(i,k-1)) &
                     *(w(i,k)+w(i-1,k)))) / (4.0 * dx)
 
+            ! d2w / dxj2
+            nudd2_w = nu * (  ( w(i-1,k) -2.0*w(i,k) + w(i+1,k)  ) / dx**2  + &
+                              ( w(i,k-1) -2.0*w(i,k) + w(i,k+1)  ) / dz**2 )
+
             ! dp/dz | k+1/2
             dpdz = ( -p(i,k-1) + p(i,k) ) / dz
 
@@ -114,8 +122,8 @@ subroutine build_rhsVelocity
             !--------------------- BUILD RHS -----------------------!
 
             ! Explicit Euler
-            rhs_u(i,k) =   -(dpdx + duudx + duwdz)
-            rhs_w(i,k) =   -(dpdz + dwudx + dwwdz)
+            rhs_u(i,k) =   -(dpdx + duudx + duwdz) + nudd2_u
+            rhs_w(i,k) =   -(dpdz + dwudx + dwwdz) + nudd2_w
 
         enddo
     enddo
