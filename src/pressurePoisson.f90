@@ -51,7 +51,7 @@ subroutine solve_pressurePoisson
     do k = 1, Nz
         do i = 1, Nx/2+1
             wavenum_sq = lmb_x_on_dx2(i) + lmb_z_on_dz2(k)
-            pseudo_phat(i,k) = rhs_hat(i,k) / wavenum_sq
+            pseudo_phat(i,k) = rhs_hat(i,k) / wavenum_sq / dble(Nx * Nz)
         enddo
     enddo
     !$omp end parallel do
