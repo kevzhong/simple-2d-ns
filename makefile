@@ -30,6 +30,7 @@ SRC =	$(SRCDIR)/main.f90 \
 		$(SRCDIR)/initialCondition.f90 \
 		$(SRCDIR)/rhsVelocity.f90 \
 		$(SRCDIR)/pressurePoisson.f90 \
+		$(SRCDIR)/fileIO.f90 \
 
 MOD_FILES = $(SRCDIR)/my_fftw.f90 \
 			$(SRCDIR)/params.f90 \

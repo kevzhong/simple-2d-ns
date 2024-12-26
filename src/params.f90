@@ -3,18 +3,25 @@ module parameters
     implicit none
 
     ! Grid points
-    integer :: Nx = 32
-    integer :: Nz = 32
+    integer :: Nx = 256
+    integer :: Nz = 256
 
     ! Domain size
-    real :: Lx = 1.0
-    real :: Lz = 1.0
+    !real :: Lx = 1.0
+    !real :: Lz = 1.0
+    
+    real :: Lx = 2.0 * 3.141592653589793
+    real :: Lz = 2.0 * 3.141592653589793
+
 
     ! Time-stepping
-    integer :: Nt = 10 ! No. of timesteps
-    real :: dt = 1.0e-4 ! Timestep
+    integer :: Nt = 100000 ! No. of timesteps
+    real :: dt = 1.0e-5 ! Timestep
 
     real :: nu = 1.0d0
+
+    ! Data writing
+    integer :: traw = 1000
 
 end module parameters
 

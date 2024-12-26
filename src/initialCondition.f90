@@ -17,8 +17,11 @@ subroutine initialCondition
     !$omp shared(u,w,xc,xm,zc,zm,Nx,Nz,Lx,Lz,PI)
     do i = 1,Nx
         do k = 1,Nz
-            u(i,k) =  sin( 2.0*PI * xc(i) / Lx ) * cos( 2.0*PI * zm(k) / Lz )
-            w(i,k) = -cos( 2.0*PI * xm(i) / Lx ) * sin( 2.0*PI * zc(k) / Lz )
+            !u(i,k) =  sin( 2.0*PI * xc(i) / Lx ) * cos( 2.0*PI * zm(k) / Lz )
+            !w(i,k) = -cos( 2.0*PI * xm(i) / Lx ) * sin( 2.0*PI * zc(k) / Lz )
+
+            u(i,k) =  sin(  xc(i) ) * cos(  zm(k)  )
+            w(i,k) = -cos(  xm(i) ) * sin(  zc(k)  )
         enddo
     enddo
     !$omp end parallel do
