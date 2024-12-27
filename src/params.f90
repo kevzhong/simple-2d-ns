@@ -3,8 +3,8 @@ module parameters
     implicit none
 
     ! Grid points
-    integer :: Nx = 256
-    integer :: Nz = 256
+    integer :: Nx = 128
+    integer :: Nz = 128
 
     ! Domain size
     !real :: Lx = 1.0
@@ -15,7 +15,7 @@ module parameters
 
 
     ! Time-stepping
-    integer :: Nt = 100000 ! No. of timesteps
+    integer :: Nt = 3000 ! No. of timesteps
     real :: dt = 1.0e-5 ! Timestep
 
     real :: nu = 1.0d0

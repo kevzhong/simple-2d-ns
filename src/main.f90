@@ -37,7 +37,7 @@ program main
         if ( mod(i,traw) .eq. 0 ) then
             write(*,*) i
 
-            !call writeVTK(u(1:Nx,1:Nz), Nx, Nz, dx, dz,'u',i)
+            call writeVTK(u(1:Nx,1:Nz), Nx, Nz, dx, dz,'u',i)
 
             call write2DField(u(1:Nx,1:Nz),Nx,Nz,'u',i)
             call write2DField(w(1:Nx,1:Nz),Nx,Nz,'w',i)
