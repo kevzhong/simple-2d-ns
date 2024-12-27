@@ -7,18 +7,34 @@ module parameters
     integer :: Nz = 128
 
     ! Domain size
-    !real :: Lx = 1.0
-    !real :: Lz = 1.0
+    real :: Lx = 1.0
+    real :: Lz = 1.0
     
-    real :: Lx = 2.0 * 3.141592653589793
-    real :: Lz = 2.0 * 3.141592653589793
-
+    !real :: Lx = 2.0 * 3.141592653589793
+    !real :: Lz = 2.0 * 3.141592653589793
 
     ! Time-stepping
-    integer :: Nt = 3000 ! No. of timesteps
+    integer :: Nt = 100000 ! No. of timesteps
     real :: dt = 1.0e-5 ! Timestep
 
     real :: nu = 1.0d0
+    real :: mean_dpdx = -1.0
+
+
+    ! Add-ons
+    logical :: scalarmode = .true.
+
+    real :: prandtl = 1.0
+
+
+    ! Wall boundary-conditions
+    real :: utop = 0.0
+    real :: ubot = 0.0
+    real :: wtop = 0.0
+    real :: wbot = 0.0
+    
+    real :: Ttop = 0.0
+    real :: Tbot = 1.0
 
     ! Data writing
     integer :: traw = 1000
@@ -52,6 +68,11 @@ module velfields
     real, allocatable, dimension(:,:) :: u,w,p
 end module velfields
 
+module scalarfields
+    implicit none
+    real, allocatable, dimension(:,:) :: temp
+end module scalarfields
+
 ! Working memory for velocity fields
 module velMemory
     implicit none
@@ -61,13 +82,18 @@ module velMemory
     !real, allocatable, dimension(:,:) :: adv_u, adv_w
 end module velMemory
 
+module scalarMemory
+    implicit none
+    ! Work arrays for RHSs
+    real, allocatable, dimension(:,:) :: rhs_temp
+end module scalarMemory
+
 ! Working memory for FFT / Poisson solver
 module fftMemory
     use fftw3
     implicit none
     ! Work arrays for Helmholtz/FFT solver
     real, allocatable, dimension(:) :: lmb_x_on_dx2
-    real, allocatable, dimension(:) :: lmb_z_on_dz2
 
     type(C_PTR) :: fftw_plan_fwd
     type(C_PTR) :: fftw_plan_bwd

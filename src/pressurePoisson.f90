@@ -34,31 +34,83 @@ end subroutine build_rhsPoisson
 
 subroutine solve_pressurePoisson
     use fftw3
+    use grid
     use fftMemory
     use parameters
     implicit none
     integer :: i, k
-    real :: wavenum_sq
+    real(8), allocatable :: am(:), ac(:), ap(:) ! tridiagonal coefficients
+    real(8), allocatable :: rbuffer(:), cbuffer(:) ! solution vector to rhs
+    real(8) :: a, b, c
 
-    ! Perform single FFT 2D R2C transform
-    ! Not OMP-accelerated but OK for now
-    call dfftw_execute_dft_r2c(fftw_plan_fwd, rhs_poisson(:,:), rhs_hat(:,:))
+    allocate( am(1:Nz) ) ; allocate( ac(1:Nz) ) ; allocate( ap(1:Nz) ) ; allocate( rbuffer(1:Nz) ) ; allocate( cbuffer(1:Nz) )
+
+    ! Tri-diagonal inversion for each kx wavenumber
 
     !$omp parallel do &
     !$omp default(none) &
-    !$omp private(i,k,wavenum_sq) &
-    !$omp shared(pseudo_phat,rhs_hat,Nx,Nz,lmb_x_on_dx2,lmb_z_on_dz2)
-    do k = 1, Nz
-        do i = 1, Nx/2+1
-            wavenum_sq = lmb_x_on_dx2(i) + lmb_z_on_dz2(k)
-            pseudo_phat(i,k) = rhs_hat(i,k) / wavenum_sq / dble(Nx * Nz)
+    !$omp private(k) &
+    !$omp shared(fftw_plan_fwd,rhs_poisson,rhs_hat,Nz)
+    do k = 1,Nz
+        ! FFT in x direction for each z-location k
+        call fftw_execute_dft_r2c(fftw_plan_fwd, rhs_poisson(:,k), rhs_hat(:,k))
+    enddo
+    !$omp end parallel do
+
+    ! Build and solve tri-diagonal system for each kx wavenumber
+
+    !$omp parallel do &
+    !$omp default(none) &
+    !$omp private(i,a,b,c,k,am,ac,ap,rbuffer,cbuffer) &
+    !$omp shared(lmb_x_on_dx2,rhs_hat,pseudo_phat,dz,Nx,Nz)
+    do i = 1,Nx/2+1
+        if (i .eq. 1) then ! Arbitrary Dirichlet
+            a = 0.0
+            b = 1.0
+            c = 0.0
+        else
+            a = 1.0 / dz**2
+            b = lmb_x_on_dx2(i) - 2.0 / dz**2
+            c = 1.0 / dz**2
+        endif
+
+        do k = 1,Nz
+
+            if (i .eq. 1) then ! Arbitrary Dirichlet
+                rhs_hat(i,k) = 0.0  
+            else
+                rhs_hat(i,k) = rhs_hat(i,k) / Nx
+            endif
+
+            am(k) = a
+            ac(k) = b
+            ap(k) = c
+
+            rbuffer(k) = real(rhs_hat(i,k))
+            cbuffer(k) = aimag(rhs_hat(i,k))
+        enddo
+
+        call tridiag(am,ac,ap,rbuffer,Nz)
+        call tridiag(am,ac,ap,cbuffer,Nz)
+
+        do k = 1,Nz
+            pseudo_phat(i,k) = CMPLX( rbuffer(k), cbuffer(k) )
         enddo
     enddo
     !$omp end parallel do
 
-    pseudo_phat(1,1) = 0.0 ! Arbitrary
 
-    call dfftw_execute_dft_c2r(fftw_plan_bwd, pseudo_phat(:,:), pseudo_p(:,:))
+    !$omp parallel do &
+    !$omp default(none) &
+    !$omp private(k) &
+    !$omp shared(fftw_plan_bwd,pseudo_phat,pseudo_p,Nz)
+    do k = 1,Nz
+        call fftw_execute_dft_c2r(fftw_plan_bwd, pseudo_phat(:,k), pseudo_p(:,k))
+    enddo
+    !$omp end parallel do
+
+
+    deallocate(am) ; deallocate(ac) ; deallocate(ap) ; deallocate(rbuffer) ; deallocate(cbuffer)
     
 end subroutine solve_pressurePoisson
 
@@ -87,8 +139,10 @@ subroutine projectionUpdate
      enddo
      !$omp end parallel do
 
-     call update_ghost(u)
-     call update_ghost(w)
-     call update_ghost(p)
+     !call update_ghost_periodic(u)
+     !call update_ghost_periodic(w)
+     !call update_ghost_periodic(p)
+
+     call update_ghost_walls(u,w,ubot,utop,wbot,wtop)
 
 end subroutine projectionUpdate

@@ -9,7 +9,6 @@ TARGET = a.out
 FFLAGS = -O3 -fdefault-real-8 -fdefault-double-8 -fallow-argument-mismatch -funroll-loops -std=f2008 -Wall -Wextra -Wpedantic -fopenmp -I$(OBJDIR) -J$(OBJDIR)
 FFLAGS += -fconvert=big-endian # For dumping .vtk files, add -fconvert=big-endian 
 
-
 #----FFTW library------------------- (adjust prefix if needed)--------------
 # For personal Linux machine
 FFTW_PREFIX := $(shell pkg-config --variable=prefix fftw3)
@@ -32,6 +31,7 @@ SRC =	$(SRCDIR)/main.f90 \
 		$(SRCDIR)/initialCondition.f90 \
 		$(SRCDIR)/rhsVelocity.f90 \
 		$(SRCDIR)/pressurePoisson.f90 \
+		$(SRCDIR)/tridiag.f90 \
 		$(SRCDIR)/fileIO.f90 \
 
 MOD_FILES = $(SRCDIR)/my_fftw.f90 \

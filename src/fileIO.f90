@@ -24,7 +24,6 @@ subroutine writeVTK(array, Nx, Ny, dx, dy,fpref,it)
     character(len=*), intent(in) :: fpref  
     integer, intent(in) :: Nx, Ny
     real(8), intent(in) :: array(Nx,Ny)   
-    real(8) :: VAL 
     real, intent(in) :: dx, dy  
     integer, intent(in) :: it
 

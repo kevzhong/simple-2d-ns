@@ -37,8 +37,10 @@ subroutine update_velocity
     enddo
     !$omp end parallel do
 
-    call update_ghost(u)
-    call update_ghost(w)
+    !call update_ghost_periodic(u)
+    !call update_ghost_periodic(w)
+
+    call update_ghost_walls(u,w,ubot,utop,wbot,wtop)
 
 end subroutine update_velocity
 
@@ -56,7 +58,7 @@ subroutine build_rhsVelocity
     !$omp default(none) &
     !$omp private(i,k) &
     !$omp private(duudx,duwdz,dwudx,dwwdz,nudd2_u,nudd2_w,dpdx,dpdz) &
-    !$omp shared(Nx,Nz,dx,dz,nu) &
+    !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx) &
     !$omp shared(u,w,p,rhs_u,rhs_w)
     do k = 1,Nz
         do i = 1,Nx
@@ -122,7 +124,7 @@ subroutine build_rhsVelocity
             !--------------------- BUILD RHS -----------------------!
 
             ! Explicit Euler
-            rhs_u(i,k) =   -(dpdx + duudx + duwdz) + nudd2_u
+            rhs_u(i,k) =   -(dpdx + duudx + duwdz) + nudd2_u - mean_dpdx
             rhs_w(i,k) =   -(dpdz + dwudx + dwwdz) + nudd2_w
 
         enddo
