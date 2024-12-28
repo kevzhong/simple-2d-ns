@@ -35,10 +35,10 @@ subroutine initialCondition
         !$omp parallel do &
         !$omp default(none) &
         !$omp private(i,k) &
-        !$omp shared(temp,Nx,Nz)
+        !$omp shared(temp,zm,Tbot,Lz,Ttop,Nx,Nz)
         do k = 1,Nz
             do i = 1,Nx
-                temp(i,k) = 0.0
+                temp(i,k) = (Ttop - Tbot) / Lz * zm(k) + Tbot
         enddo
     enddo
     !$omp end parallel do

@@ -50,16 +50,18 @@ subroutine build_rhsVelocity
     use parameters
     use grid
     use velMemory
+    use scalarfields
     implicit none
     integer :: i, k
     real :: duudx, duwdz, dwudx, dwwdz, nudd2_u, nudd2_w, dpdx, dpdz
+    real :: Tu_interp, Tw_interp
 
     !$omp parallel do &
     !$omp default(none) &
     !$omp private(i,k) &
-    !$omp private(duudx,duwdz,dwudx,dwwdz,nudd2_u,nudd2_w,dpdx,dpdz) &
-    !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx) &
-    !$omp shared(u,w,p,rhs_u,rhs_w)
+    !$omp private(duudx,duwdz,dwudx,dwwdz,nudd2_u,nudd2_w,dpdx,dpdz,Tu_interp,Tw_interp) &
+    !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx,scalarmode,beta_gx,beta_gz) &
+    !$omp shared(u,w,p,temp,rhs_u,rhs_w)
     do k = 1,Nz
         do i = 1,Nx
 
@@ -126,6 +128,16 @@ subroutine build_rhsVelocity
             ! Explicit Euler
             rhs_u(i,k) =   -(dpdx + duudx + duwdz) + nudd2_u - mean_dpdx
             rhs_w(i,k) =   -(dpdz + dwudx + dwwdz) + nudd2_w
+
+            if (scalarmode .eqv. .true.) then
+
+                Tu_interp = 0.5 * ( temp(i-1,k) + temp(i,k) )
+                Tw_interp = 0.5 * ( temp(i,k-1) + temp(i,k) )
+
+                rhs_u(i,k) = rhs_u(i,k) - beta_gx * Tu_interp
+                rhs_w(i,k) = rhs_w(i,k) - beta_gz * Tw_interp
+
+            endif
 
         enddo
     enddo

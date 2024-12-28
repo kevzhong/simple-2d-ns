@@ -17,14 +17,15 @@ module parameters
     integer :: Nt = 100000 ! No. of timesteps
     real :: dt = 1.0e-5 ! Timestep
 
-    real :: nu = 1.0d0
+    real :: nu = 1.0 
     real :: mean_dpdx = -1.0
 
 
     ! Add-ons
-    logical :: scalarmode = .true.
+    logical :: scalarmode = .false.
 
     real :: prandtl = 1.0
+    real :: beta_gx = 0.0 ; real :: beta_gz = 0.0
 
 
     ! Wall boundary-conditions

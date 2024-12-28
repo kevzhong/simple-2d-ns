@@ -7,6 +7,7 @@ program main
     use omp_lib
     use grid
     use velfields
+    use scalarfields
     implicit none
     integer :: i
     real :: time
@@ -27,21 +28,25 @@ program main
     do i = 1,nt
         call rhsVelocity ! Build RHS vector for velocity solution
         call update_velocity ! Calculate intermediate velocity, ustar
+
+        if (scalarmode .eqv. .true.) then
+            call rhsScalar
+            call update_scalar
+        endif
+        
         call pressurePoisson ! Build div(ustar), solve Poisson, projection update to n+1
 
         ! call postpro
         ! call check
         time = time + dt
-        !write(*,*) u
 
         if ( mod(i,traw) .eq. 0 ) then
             write(*,*) i
 
-            call writeVTK(u(1:Nx,1:Nz), Nx, Nz, dx, dz,'u',i)
-
-            call write2DField(u(1:Nx,1:Nz),Nx,Nz,'u',i)
-            call write2DField(w(1:Nx,1:Nz),Nx,Nz,'w',i)
-            call write2DField(p(1:Nx,1:Nz),Nx,Nz,'p',i)
+            call write2DField(u(1:Nx,1:Nz),Nx,Nz,dx,dz,'u',i)
+            !call write2DField(w(1:Nx,1:Nz),Nx,Nz,dx,dz,'w',i)
+            !call write2DField(p(1:Nx,1:Nz),Nx,Nz,dx,dz,'p',i)
+            if (scalarmode .eqv. .true.) call write2DField(temp(1:Nx,1:Nz),Nx,Nz,dx,dz,'c',i)
 
         endif
     enddo
