@@ -64,23 +64,23 @@ subroutine solve_pressurePoisson
     !$omp private(i,a,b,c,k,am,ac,ap,rbuffer,cbuffer) &
     !$omp shared(lmb_x_on_dx2,rhs_hat,pseudo_phat,dz,Nx,Nz)
     do i = 1,Nx/2+1
-        if (i .eq. 1) then ! Arbitrary Dirichlet
-            a = 0.0
-            b = 1.0
-            c = 0.0
-        else
+        !if (i .eq. 1) then ! Arbitrary Dirichlet
+        !    a = 0.0
+        !    b = 1.0
+        !    c = 0.0
+        !else
             a = 1.0 / dz**2
             b = lmb_x_on_dx2(i) - 2.0 / dz**2
             c = 1.0 / dz**2
-        endif
+        !endif
 
         do k = 1,Nz
 
-            if (i .eq. 1) then ! Arbitrary Dirichlet
-                rhs_hat(i,k) = 0.0  
-            else
+            !if (i .eq. 1) then ! Arbitrary Dirichlet
+            !    rhs_hat(i,k) = 0.0  
+            !else
                 rhs_hat(i,k) = rhs_hat(i,k) / Nx
-            endif
+            !endif
 
             am(k) = a
             ac(k) = b
@@ -129,10 +129,19 @@ subroutine projectionUpdate
      !$omp shared(u,w,p,pseudo_p,dx,dz,Nx,Nz,dt)
      do k = 1,Nz
          do i = 1,Nx
-             u(i,k) = u(i,k) - dt * ( pseudo_p(i,k) - pseudo_p(i-1,k) ) / dx
+            if (i .eq. 1) then
+                u(i,k) = u(i,k) - dt * ( pseudo_p(i,k) - pseudo_p(Nx,k) ) / dx
+                else
+                u(i,k) = u(i,k) - dt * ( pseudo_p(i,k) - pseudo_p(i-1,k) ) / dx
+            endif
 
-             w(i,k) = w(i,k) - dt * ( pseudo_p(i,k) - pseudo_p(i,k-1) ) / dz
+             ! Neumann implied dp/dz = dp/dn = 0 for k = 1
+             ! w_n+1 = w* = w_wall at boundary
+            if (k .ne. 1) then
+                w(i,k) = w(i,k) - dt * ( pseudo_p(i,k) - pseudo_p(i,k-1) ) / dz
+            endif
 
+            
              p(i,k) = p(i,k) + pseudo_p(i,k)
 
          enddo
@@ -143,6 +152,8 @@ subroutine projectionUpdate
      !call update_ghost_periodic(w)
      !call update_ghost_periodic(p)
 
-     call update_ghost_walls(u,w,ubot,utop,wbot,wtop)
+     !call update_ghost_walls(u,w,ubot,utop,wbot,wtop)
+
+     call update_ghost_pressure(p)
 
 end subroutine projectionUpdate

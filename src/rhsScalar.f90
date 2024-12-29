@@ -46,7 +46,6 @@ subroutine build_rhsScalar
     implicit none
     integer :: i, k
     real :: duTdx,  dwTdz,  kap_dd2_t
-    real :: Tval
 
 
     !$omp parallel do &

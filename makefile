@@ -6,7 +6,7 @@ OUTDIR = outputdir
 
 TARGET = a.out
 
-FFLAGS = -O3 -fdefault-real-8 -fdefault-double-8 -fallow-argument-mismatch -funroll-loops -std=f2008 -Wall -Wextra -Wpedantic -fopenmp -I$(OBJDIR) -J$(OBJDIR)
+FFLAGS = -O3 -fdefault-real-8 -fdefault-double-8 -fcheck=bounds -fallow-argument-mismatch -funroll-loops -std=f2008 -Wall -Wextra -Wpedantic -fopenmp -I$(OBJDIR) -J$(OBJDIR)
 #FFLAGS += -fconvert=big-endian # For dumping .vtk files, add -fconvert=big-endian 
 
 #----FFTW library------------------- (adjust prefix if needed)--------------

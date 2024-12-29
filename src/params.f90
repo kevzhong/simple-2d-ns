@@ -3,19 +3,19 @@ module parameters
     implicit none
 
     ! Grid points
-    integer :: Nx = 256
+    integer :: Nx = 512
     integer :: Nz = 256
 
     ! Domain size
-    real :: Lx = 1.0
+    real :: Lx = 2.0
     real :: Lz = 1.0
     
     !real :: Lx = 2.0 * 3.141592653589793
     !real :: Lz = 2.0 * 3.141592653589793
 
     ! Time-stepping
-    integer :: Nt = 200000 ! No. of timesteps
-    real :: dt = 1.0e-5 ! Timestep
+    integer :: Nt = 1000000 ! No. of timesteps
+    real :: dt = 1.0e-4 ! Timestep
 
     real :: nu = 1.0 / 1000.0
     real :: mean_dpdx = 0.0
@@ -25,7 +25,7 @@ module parameters
     logical :: scalarmode = .true.
 
     real :: prandtl = 1.0
-    real :: beta_gx = 0.0 ; real :: beta_gz = 1.0
+    real :: beta_gx = 0.0 ; real :: beta_gz = 1.0 ! buoyancy forcing
 
 
     ! Wall boundary-conditions
@@ -38,7 +38,7 @@ module parameters
     real :: Tbot = 1.0
 
     ! Data writing
-    integer :: traw = 1000
+    integer :: traw = 2000
 
 end module parameters
 

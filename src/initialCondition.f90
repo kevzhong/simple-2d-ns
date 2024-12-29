@@ -31,6 +31,7 @@ subroutine initialCondition
     enddo
     !$omp end parallel do
     call update_ghost_walls(u,w,ubot,utop,wbot,wtop)
+    !call update_ghost_pressure(p)
 
     if (scalarmode .eqv. .true.) then
         call random_seed()

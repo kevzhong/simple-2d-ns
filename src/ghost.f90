@@ -48,6 +48,23 @@ module ghost
 
     end subroutine update_ghost_wallTemp
 
+
+    subroutine update_ghost_pressure(p)
+        use parameters, only: Nx, Nz
+        implicit none
+        real(8), intent(inout), dimension(halosize-1:Nx+halosize , halosize-1:Nz+halosize ) :: p
+
+        ! Wall BCs: dpdn = 0
+        p(:,1-halosize) = p(:,1)
+        p(:,Nz+halosize) = p(:,Nz)
+
+
+        ! Periodicity in x
+        p(1-halosize,:) = p(Nx,:)
+        p(Nx+halosize,:) = p(1,:)
+
+    end subroutine update_ghost_pressure
+
     ! subroutine update_ghost_periodic(array)
     !     use parameters, only: Nx, Nz
     !     implicit none

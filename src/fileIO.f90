@@ -16,6 +16,7 @@ subroutine write2DField(array,Nx,Ny,dx,dy,fpref,it)
     call write_xdmf(fpref, it, Nx, Ny, dx, dy) ! Writing header for viewing in Paraview
 end subroutine write2DField
 
+! Write .xmf files to read binary dumps in Paraview
 subroutine write_xdmf(fpref, it,nx, ny, dx,dy)
     implicit none
     character(len=50) :: filename  ! xdmf file name

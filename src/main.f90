@@ -12,6 +12,8 @@ program main
     integer :: i
     real :: time
   
+    ! For timing
+    real :: start_time, end_time
 
     !$omp parallel
     !$omp master
@@ -30,6 +32,9 @@ program main
 
     !--------- Begin time-marching ------------------
     do i = 1,nt
+
+        call cpu_time(start_time)
+
         call rhsVelocity ! Build RHS vector for velocity solution
         if (scalarmode .eqv. .true.) call rhsScalar ! Build RHS vector for temp solution
 
@@ -43,8 +48,10 @@ program main
         ! call check
         time = time + dt
 
+        call cpu_time(end_time)
+
         if ( mod(i,traw) .eq. 0 ) then
-            write(*,*) i
+            write(*,*) "Timestep ", i," CPU-time per step = ", end_time - start_time
 
             call write2DField(u(1:Nx,1:Nz),Nx,Nz,dx,dz,'u',i)
             call write2DField(w(1:Nx,1:Nz),Nx,Nz,dx,dz,'w',i)
@@ -52,6 +59,8 @@ program main
             if (scalarmode .eqv. .true.) call write2DField(temp(1:Nx,1:Nz),Nx,Nz,dx,dz,'c',i)
 
         endif
+
+
     enddo
     !--------- End time-marching -------------------
 
