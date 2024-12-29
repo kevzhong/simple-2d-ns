@@ -4,23 +4,6 @@ module ghost
 
     contains
 
-    ! subroutine update_ghost_periodic(array)
-    !     use parameters, only: Nx, Nz
-    !     implicit none
-    !     real(8), intent(inout), dimension(halosize-1:Nx+halosize , halosize-1:Nz+halosize ) :: array
-
-    !     ! Periodicity application
-
-    !     ! x-halo swap
-    !     array(1-halosize,:) = array(Nx,:)
-    !     array(Nx+halosize,:) = array(1,:)
-
-    !     ! z-halo swap
-    !     array(:,halosize-1) = array(:,Nz)
-    !     array(:,Nz+halosize) = array(:,1)
-
-    ! end subroutine update_ghost_periodic
-
     subroutine update_ghost_walls(u,w,ubot,utop,wbot,wtop)
         use parameters, only: Nx, Nz
         implicit none
@@ -64,5 +47,22 @@ module ghost
         temp(Nx+halosize,:) = temp(1,:)
 
     end subroutine update_ghost_wallTemp
+
+    ! subroutine update_ghost_periodic(array)
+    !     use parameters, only: Nx, Nz
+    !     implicit none
+    !     real(8), intent(inout), dimension(halosize-1:Nx+halosize , halosize-1:Nz+halosize ) :: array
+
+    !     ! Periodicity application
+
+    !     ! x-halo swap
+    !     array(1-halosize,:) = array(Nx,:)
+    !     array(Nx+halosize,:) = array(1,:)
+
+    !     ! z-halo swap
+    !     array(:,halosize-1) = array(:,Nz)
+    !     array(:,Nz+halosize) = array(:,1)
+
+    ! end subroutine update_ghost_periodic
 
 end module ghost

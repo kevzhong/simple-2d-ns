@@ -13,7 +13,11 @@ program main
     real :: time
   
 
+    !$omp parallel
+    !$omp master
     write(*,*) "Executing solver with ", OMP_GET_NUM_THREADS() , " threads!"
+    !$omp end master
+    !$omp end parallel
 
 
     ! Variable initialisation
@@ -27,12 +31,11 @@ program main
     !--------- Begin time-marching ------------------
     do i = 1,nt
         call rhsVelocity ! Build RHS vector for velocity solution
-        call update_velocity ! Calculate intermediate velocity, ustar
+        if (scalarmode .eqv. .true.) call rhsScalar ! Build RHS vector for temp solution
 
-        if (scalarmode .eqv. .true.) then
-            call rhsScalar
-            call update_scalar
-        endif
+        call update_velocity ! Calculate intermediate velocity, ustar
+        if (scalarmode .eqv. .true.) call update_scalar ! New timestep value for temperature
+
         
         call pressurePoisson ! Build div(ustar), solve Poisson, projection update to n+1
 
@@ -44,7 +47,7 @@ program main
             write(*,*) i
 
             call write2DField(u(1:Nx,1:Nz),Nx,Nz,dx,dz,'u',i)
-            !call write2DField(w(1:Nx,1:Nz),Nx,Nz,dx,dz,'w',i)
+            call write2DField(w(1:Nx,1:Nz),Nx,Nz,dx,dz,'w',i)
             !call write2DField(p(1:Nx,1:Nz),Nx,Nz,dx,dz,'p',i)
             if (scalarmode .eqv. .true.) call write2DField(temp(1:Nx,1:Nz),Nx,Nz,dx,dz,'c',i)
 

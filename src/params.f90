@@ -3,8 +3,8 @@ module parameters
     implicit none
 
     ! Grid points
-    integer :: Nx = 128
-    integer :: Nz = 128
+    integer :: Nx = 256
+    integer :: Nz = 256
 
     ! Domain size
     real :: Lx = 1.0
@@ -14,18 +14,18 @@ module parameters
     !real :: Lz = 2.0 * 3.141592653589793
 
     ! Time-stepping
-    integer :: Nt = 100000 ! No. of timesteps
+    integer :: Nt = 200000 ! No. of timesteps
     real :: dt = 1.0e-5 ! Timestep
 
-    real :: nu = 1.0 
-    real :: mean_dpdx = -1.0
+    real :: nu = 1.0 / 1000.0
+    real :: mean_dpdx = 0.0
 
 
     ! Add-ons
-    logical :: scalarmode = .false.
+    logical :: scalarmode = .true.
 
     real :: prandtl = 1.0
-    real :: beta_gx = 0.0 ; real :: beta_gz = 0.0
+    real :: beta_gx = 0.0 ; real :: beta_gz = 1.0
 
 
     ! Wall boundary-conditions

@@ -7,6 +7,7 @@ subroutine initialCondition
     implicit none
     integer :: i, k
     real(8) :: PI = 2.d0*dasin(1.d0) 
+    real :: eps
 
 
 
@@ -32,13 +33,18 @@ subroutine initialCondition
     call update_ghost_walls(u,w,ubot,utop,wbot,wtop)
 
     if (scalarmode .eqv. .true.) then
+        call random_seed()
         !$omp parallel do &
         !$omp default(none) &
-        !$omp private(i,k) &
+        !$omp private(eps,i,k) &
         !$omp shared(temp,zm,Tbot,Lz,Ttop,Nx,Nz)
         do k = 1,Nz
             do i = 1,Nx
-                temp(i,k) = (Ttop - Tbot) / Lz * zm(k) + Tbot
+                temp(i,k) = (Ttop - Tbot) / Lz * zm(k) + Tbot 
+
+                ! Super-impose perturbation
+                call random_number(eps)
+                temp(i,k) = temp(i,k) + 0.2 * (eps - 0.5)
         enddo
     enddo
     !$omp end parallel do

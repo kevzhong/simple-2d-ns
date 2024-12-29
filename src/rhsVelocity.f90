@@ -134,8 +134,8 @@ subroutine build_rhsVelocity
                 Tu_interp = 0.5 * ( temp(i-1,k) + temp(i,k) )
                 Tw_interp = 0.5 * ( temp(i,k-1) + temp(i,k) )
 
-                rhs_u(i,k) = rhs_u(i,k) - beta_gx * Tu_interp
-                rhs_w(i,k) = rhs_w(i,k) - beta_gz * Tw_interp
+                rhs_u(i,k) = rhs_u(i,k) + beta_gx * Tu_interp
+                rhs_w(i,k) = rhs_w(i,k) + beta_gz * Tw_interp
 
             endif
 
