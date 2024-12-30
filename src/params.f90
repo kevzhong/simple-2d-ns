@@ -17,7 +17,7 @@ module parameters
     integer :: Nt = 1000000 ! No. of timesteps
     real :: dt = 1.0e-4 ! Timestep
 
-    real :: nu = 1.0 / 1000.0
+    real :: nu = 1.0 / 3162.0
     real :: mean_dpdx = 0.0
 
 

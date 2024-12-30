@@ -25,12 +25,15 @@ subroutine tridiag(ami,aci,api,rhs,N)
     
         val = aci(N) - ami(N) * scratch(N-1)
     
-        ! Final entry of forward elimination, test to see if matrix is singular
-        if ( abs(val) .gt. epsilon(1.0d0) ) then
-            rhs(N) = 1.0 / val * ( rhs(N) - ami(N) * rhs(N-1) )
-        else
-            rhs(N) = 0.0
-        endif
+        ! ! Final entry of forward elimination, test to see if matrix is singular
+        ! if ( abs(val) .gt. epsilon(1.0d0) ) then
+        !     rhs(N) = 1.0 / val * ( rhs(N) - ami(N) * rhs(N-1) )
+        ! else
+        !     rhs(N) = 0.0
+        ! endif
+
+        rhs(N) = 1.0 / val * ( rhs(N) - ami(N) * rhs(N-1) )
+
     
         ! Backward substitution
         do i = N-1, 1, -1

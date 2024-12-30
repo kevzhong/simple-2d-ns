@@ -61,28 +61,20 @@ subroutine solve_pressurePoisson
 
     ! Build and solve tri-diagonal system for each kx wavenumber
 
+    a = 1.0 / dz**2
+    c = 1.0 / dz**2
+
     !$omp parallel do &
     !$omp default(none) &
-    !$omp private(i,a,b,c,k,am,ac,ap,rbuffer,cbuffer) &
-    !$omp shared(lmb_x_on_dx2,rhs_hat,pseudo_phat,dz,Nx,Nz)
+    !$omp private(i,b,k,am,ac,ap,rbuffer,cbuffer) &
+    !$omp shared(a,c,lmb_x_on_dx2,rhs_hat,pseudo_phat,dz,Nx,Nz)
     do i = 1,Nx/2+1
-        !if (i .eq. 1) then ! Arbitrary Dirichlet
-        !    a = 0.0
-        !    b = 1.0
-        !    c = 0.0
-        !else
-            a = 1.0 / dz**2
-            b = lmb_x_on_dx2(i) - 2.0 / dz**2
-            c = 1.0 / dz**2
-        !endif
+
+        b = lmb_x_on_dx2(i) - 2.0 / dz**2
 
         do k = 1,Nz
 
-            !if (i .eq. 1) then ! Arbitrary Dirichlet
-            !    rhs_hat(i,k) = 0.0  
-            !else
-                rhs_hat(i,k) = rhs_hat(i,k) / Nx
-            !endif
+            rhs_hat(i,k) = rhs_hat(i,k) / Nx
 
             am(k) = a
             ac(k) = b
@@ -91,6 +83,15 @@ subroutine solve_pressurePoisson
             rbuffer(k) = real(rhs_hat(i,k))
             cbuffer(k) = aimag(rhs_hat(i,k))
         enddo
+
+        ! Arbitrary Dirichlet for 0 mode, over-ride
+        if (i .eq. 1) then
+            ap(1) = 0.0
+            ac(1) = 1.0
+            rbuffer(1) = 0.0
+            cbuffer(1) = 0.0
+        endif
+
 
         call tridiag(am,ac,ap,rbuffer,Nz)
         call tridiag(am,ac,ap,cbuffer,Nz)
@@ -149,17 +150,17 @@ subroutine projectionUpdate
     do k = 1,Nz
         do i = 1,Nx
 
-           if (i .eq. 1) then
-                u(i,k) = u(i,k) - dt * ( pseudo_p(i,k) - pseudo_p(Nx,k) ) / dx
-            else
+           !if (i .eq. 1) then
+                !u(i,k) = u(i,k) - dt * ( pseudo_p(i,k) - pseudo_p(Nx,k) ) / dx
+            !else
                 u(i,k) = u(i,k) - dt * ( pseudo_p(i,k) - pseudo_p(i-1,k) ) / dx
-           endif
+           !endif
 
             ! Neumann implied dp/dz = dp/dn = 0 for k = 1
             ! w_n+1 = w* = w_wall at boundary
-           if (k .ne. 1) then
+           !if (k .ne. 1) then
                w(i,k) = w(i,k) - dt * ( pseudo_p(i,k) - pseudo_p(i,k-1) ) / dz
-           endif
+           !endif
 
             p(i,k) = p(i,k) + pseudo_p(i,k)
 
