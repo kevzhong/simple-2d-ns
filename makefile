@@ -31,6 +31,7 @@ SRC =	$(SRCDIR)/main.f90 \
 		$(SRCDIR)/initialCondition.f90 \
 		$(SRCDIR)/rhsVelocity.f90 \
 		$(SRCDIR)/rhsScalar.f90 \
+		$(SRCDIR)/adi/ADI_implicitUpdate.f90 \
 		$(SRCDIR)/pressurePoisson.f90 \
 		$(SRCDIR)/tridiag.f90 \
 		$(SRCDIR)/fileIO.f90 \
@@ -52,8 +53,12 @@ $(OBJDIR):
 $(OUTDIR):
 	mkdir -p $(OUTDIR)
 
-# Pattern rule to compile .f90 files into .o files
+# Pattern rule to compile .f90 files into .o files in SRCDIR
 $(OBJDIR)/%.o: $(SRCDIR)/%.f90
+	$(FC) $(FFLAGS) -c $< -o $@
+
+# In src/adi/
+$(OBJDIR)/%.o: $(SRCDIR)/adi/%.f90
 	$(FC) $(FFLAGS) -c $< -o $@
 
 # Linking the final executable

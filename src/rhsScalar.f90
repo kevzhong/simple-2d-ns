@@ -11,7 +11,7 @@ subroutine rhsScalar
 end subroutine rhsScalar
 
 ! Calculate intermediate velocity field, ustar, to be used for fractional step
-subroutine update_scalar
+subroutine update_scalar_fullyExplicit
     use scalarfields
     use scalarMemory
     use parameters
@@ -34,7 +34,7 @@ subroutine update_scalar
 
     call update_ghost_wallTemp(temp,Tbot,Ttop)
 
-end subroutine update_scalar
+end subroutine update_scalar_fullyExplicit
 
 ! Build all RHS vectors for velocity in Explicit Euler manner
 subroutine build_rhsScalar
@@ -57,7 +57,6 @@ subroutine build_rhsScalar
     do k = 1,Nz
         do i = 1,Nx
 
-            !--------------------- U VELOCITY -----------------------!
 
             ! d uT  |               1     [                        ]
             ! ----- |           =  ----   |   uT       -   uT      | 
@@ -77,7 +76,7 @@ subroutine build_rhsScalar
 
             ! d2T / dxj2
             kap_dd2_t = nu/prandtl * (  ( temp(i-1,k) -2.0*temp(i,k) + temp(i+1,k)  ) / dx**2  + &
-                        ( temp(i,k-1) -2.0*temp(i,k) + temp(i,k+1)  ) / dz**2 )
+                                        ( temp(i,k-1) -2.0*temp(i,k) + temp(i,k+1)  ) / dz**2 )
 
             !--------------------- BUILD RHS -----------------------!
 

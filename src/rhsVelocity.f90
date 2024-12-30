@@ -16,7 +16,7 @@ subroutine rhsVelocity
 end subroutine rhsVelocity
 
 ! Calculate intermediate velocity field, ustar, to be used for fractional step
-subroutine update_velocity
+subroutine update_velocity_fullyExplicit
     use velfields
     use parameters
     use velMemory
@@ -42,7 +42,7 @@ subroutine update_velocity
 
     call update_ghost_walls(u,w,ubot,utop,wbot,wtop)
 
-end subroutine update_velocity
+end subroutine update_velocity_fullyExplicit
 
 ! Build all RHS vectors for velocity in Explicit Euler manner
 subroutine build_rhsVelocity
@@ -55,6 +55,30 @@ subroutine build_rhsVelocity
     integer :: i, k
     real :: duudx, duwdz, dwudx, dwwdz, nudd2_u, nudd2_w, dpdx, dpdz
     real :: Tu_interp, Tw_interp
+
+    ! Staggered grid arrangement, the stagger is by -1/2, index convention:
+
+    !                     v(i,j+1,k)
+    !                      ^
+    !                      |
+    !                      |
+    !    __________________|___________________
+    !   |                                      |
+    !   |                                      |
+    !   |                                      |
+    !   |                                      |
+    !   |  u(i,j,k)                            |
+    ! ----->                               ------>  u(i+1,j,k)
+    !   |                  O                   |
+    !   |              temp(i,j,k)             |
+    !   |              or p(i,j,k)             |
+    !   |                                      |
+    !   |                                      |
+    !   |                  ^                   |
+    !   |__________________|___________________
+    !                      |
+    !                      |
+    !                     v(i,j,k)
 
     !$omp parallel do &
     !$omp default(none) &
@@ -116,8 +140,8 @@ subroutine build_rhsVelocity
                     *(w(i,k)+w(i-1,k)))) / (4.0 * dx)
 
             ! d2w / dxj2
-            nudd2_w = nu * (  ( w(i-1,k) -2.0*w(i,k) + w(i+1,k)  ) / dx**2  + &
-                              ( w(i,k-1) -2.0*w(i,k) + w(i,k+1)  ) / dz**2 )
+            nudd2_w = nu  * (  ( w(i-1,k) -2.0*w(i,k) + w(i+1,k)  ) / dx**2  + &
+                               ( w(i,k-1) -2.0*w(i,k) + w(i,k+1)  ) / dz**2 )
 
             ! dp/dz | k+1/2
             dpdz = ( -p(i,k-1) + p(i,k) ) / dz

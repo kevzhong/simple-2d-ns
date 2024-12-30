@@ -14,10 +14,10 @@ module parameters
     !real :: Lz = 2.0 * 3.141592653589793
 
     ! Time-stepping
-    integer :: Nt = 400000 ! No. of timesteps
-    real :: dt = 1.0e-5 ! Timestep
+    integer :: Nt = 1000000 ! No. of timesteps
+    real :: dt = 1.0e-4 ! Timestep
 
-    real :: nu = 1.0 
+    real :: nu = 1.0 / 1000.0
     real :: mean_dpdx = 0.0
 
 
@@ -67,6 +67,8 @@ end module grid
 module velfields
     implicit none
     real, allocatable, dimension(:,:) :: u,w,p
+    real, allocatable, dimension(:,:) :: pseudo_p
+
 end module velfields
 
 module scalarfields
@@ -101,6 +103,23 @@ module fftMemory
     type(C_PTR) :: ptr1, ptr2, ptr3, ptr4
 
     complex(C_DOUBLE_COMPLEX), pointer :: rhs_hat(:,:), pseudo_phat(:,:)
-    real(C_DOUBLE), pointer :: pseudo_p(:,:), rhs_poisson(:,:) ! Poisson equation
+    real(C_DOUBLE), pointer :: soln_poisson(:,:), rhs_poisson(:,:) ! Poisson equation
 
 end module fftMemory
+
+! Working memory for implicit solve
+module implicit
+    implicit none
+    
+    ! TDM coefficients
+    real, allocatable, dimension(:) :: ami(:), aci(:), api(:)
+    real, allocatable, dimension(:) :: amk(:), ack(:), apk(:)
+
+    ! RHS/solution buffers for TDM
+    real, allocatable, dimension(:) :: tdm_rhsX1(:), tdm_rhsX2(:) ! Two buffers for two solves in Sherman--Morrison
+    real, allocatable, dimension(:) :: tdm_rhsZ(:)
+
+    ! Provision solution array (delta u etc to pass in x->y->z)
+    real, allocatable, dimension(:,:) :: impl_delta
+
+end module implicit
