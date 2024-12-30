@@ -15,7 +15,11 @@ Various branches have been created in what is (generally) increasing order of im
 - `implicit`: Implicit time-stepping treatment of the diffusive terms using an Alternating Direct Implicit (ADI) approach or Helmholtz solver. Currently a WIP.
 - `RK3`: Implementation of RK3 sub-stepping. TODO.
 - `non-uniform-grid`: Grid-stretching in the wall-normal direction. TODO
+
+Fields are dumped as binary files. In the later branches, I have routines which dump additional XDMF instructions such that they can be conveniently imported into Paraview.
+
 ## Dependencies
 
 - FFTW3
 - Fortran compiler
+- OpenMP
