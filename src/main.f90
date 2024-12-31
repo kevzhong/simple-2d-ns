@@ -38,10 +38,12 @@ program main
         call rhsVelocity ! Build RHS vector for velocity solution
         if (scalarmode .eqv. .true.) call rhsScalar ! Build RHS vector for temp solution
 
-        call update_velocity_fullyExplicit ! Calculate intermediate velocity, ustar
-        if (scalarmode .eqv. .true.) call update_scalar_fullyExplicit ! New timestep value for temperature
-        
-        !call ADI_implicitUpdate
+        if (implicitmode .eqv. .true.) then        
+            call ADI_implicitUpdate
+        else
+            call update_velocity_fullyExplicit ! Calculate intermediate velocity, ustar
+            if (scalarmode .eqv. .true.) call update_scalar_fullyExplicit ! New timestep value for temperature
+        endif
         
         call pressurePoisson ! Build div(ustar), solve Poisson, projection update to n+1
 

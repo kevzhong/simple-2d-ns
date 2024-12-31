@@ -22,11 +22,11 @@ subroutine update_scalar_fullyExplicit
     !$omp parallel do &
     !$omp default(none) &
     !$omp private(i,k) &
-    !$omp shared(Nx,Nz,dt) &
+    !$omp shared(Nx,Nz) &
     !$omp shared(temp,rhs_temp)
     do k = 1,Nz
         do i = 1, Nx
-            temp(i,k) = temp(i,k) + dt * rhs_temp(i,k)
+            temp(i,k) = temp(i,k) + rhs_temp(i,k)
         enddo
     enddo
     !$omp end parallel do
@@ -52,7 +52,7 @@ subroutine build_rhsScalar
     !$omp default(none) &
     !$omp private(i,k) &
     !$omp private(duTdx,dwTdz,kap_dd2_t) &
-    !$omp shared(Nx,Nz,dx,dz,nu,prandtl) &
+    !$omp shared(Nx,Nz,dx,dz,nu,prandtl,dt) &
     !$omp shared(u,w,temp,rhs_temp)
     do k = 1,Nz
         do i = 1,Nx
@@ -81,7 +81,7 @@ subroutine build_rhsScalar
             !--------------------- BUILD RHS -----------------------!
 
             ! Explicit Euler
-            rhs_temp(i,k) =   -(duTdx + dwTdz) + kap_dd2_t
+            rhs_temp(i,k) =   dt * ( -(duTdx + dwTdz) + kap_dd2_t )
         enddo
     enddo
     !$omp end parallel do

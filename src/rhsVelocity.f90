@@ -27,12 +27,12 @@ subroutine update_velocity_fullyExplicit
     !$omp parallel do &
     !$omp default(none) &
     !$omp private(i,k) &
-    !$omp shared(Nx,Nz,dt) &
+    !$omp shared(Nx,Nz) &
     !$omp shared(u,w,rhs_u,rhs_w)
     do k = 1,Nz
         do i = 1, Nx
-            u(i,k) = u(i,k) + dt * rhs_u(i,k)
-            w(i,k) = w(i,k) + dt * rhs_w(i,k)
+            u(i,k) = u(i,k) +  rhs_u(i,k)
+            w(i,k) = w(i,k) +  rhs_w(i,k)
         enddo
     enddo
     !$omp end parallel do
@@ -84,7 +84,7 @@ subroutine build_rhsVelocity
     !$omp default(none) &
     !$omp private(i,k) &
     !$omp private(duudx,duwdz,dwudx,dwwdz,nudd2_u,nudd2_w,dpdx,dpdz,Tu_interp,Tw_interp) &
-    !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx,scalarmode,beta_gx,beta_gz) &
+    !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx,scalarmode,beta_gx,beta_gz,dt) &
     !$omp shared(u,w,p,temp,rhs_u,rhs_w)
     do k = 1,Nz
         do i = 1,Nx
@@ -150,16 +150,16 @@ subroutine build_rhsVelocity
             !--------------------- BUILD RHS -----------------------!
 
             ! Explicit Euler
-            rhs_u(i,k) =   -(dpdx + duudx + duwdz) + nudd2_u - mean_dpdx
-            rhs_w(i,k) =   -(dpdz + dwudx + dwwdz) + nudd2_w
+            rhs_u(i,k) =   dt * ( -(dpdx + duudx + duwdz) + nudd2_u - mean_dpdx )
+            rhs_w(i,k) =   dt * ( -(dpdz + dwudx + dwwdz) + nudd2_w )
 
             if (scalarmode .eqv. .true.) then
 
                 Tu_interp = 0.5 * ( temp(i-1,k) + temp(i,k) )
                 Tw_interp = 0.5 * ( temp(i,k-1) + temp(i,k) )
 
-                rhs_u(i,k) = rhs_u(i,k) + beta_gx * Tu_interp
-                rhs_w(i,k) = rhs_w(i,k) + beta_gz * Tw_interp
+                rhs_u(i,k) = rhs_u(i,k) + dt * ( beta_gx * Tu_interp )
+                rhs_w(i,k) = rhs_w(i,k) + dt * ( beta_gz * Tw_interp )
 
             endif
 

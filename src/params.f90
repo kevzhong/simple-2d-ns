@@ -3,23 +3,25 @@ module parameters
     implicit none
 
     ! Grid points
-    integer :: Nx = 128
+    integer :: Nx = 256
     integer :: Nz = 128
 
     ! Domain size
-    real :: Lx = 1.0
+    real :: Lx = 2.0
     real :: Lz = 1.0
     
     !real :: Lx = 2.0 * 3.141592653589793
     !real :: Lz = 2.0 * 3.141592653589793
 
     ! Time-stepping
-    integer :: Nt = 1000000 ! No. of timesteps
+    integer :: Nt = 400000 ! No. of timesteps
     real :: dt = 1.0e-4 ! Timestep
 
-    real :: nu = 1.0 / 3162.0
+    real :: nu = 1.0 / 10000.0
     real :: mean_dpdx = 0.0
 
+
+    logical :: implicitmode = .true.
 
     ! Add-ons
     logical :: scalarmode = .true.
@@ -119,7 +121,7 @@ module implicit
     real, allocatable, dimension(:) :: tdm_rhsX1(:), tdm_rhsX2(:) ! Two buffers for two solves in Sherman--Morrison
     real, allocatable, dimension(:) :: tdm_rhsZ(:)
 
-    ! Provision solution array (delta u etc to pass in x->y->z)
+    ! Provisional solution array (delta u etc to pass in x->y->z)
     real, allocatable, dimension(:,:) :: impl_delta
 
 end module implicit
