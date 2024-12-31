@@ -4,43 +4,73 @@ module ghost
 
     contains
 
-    subroutine update_ghost_walls(u,w,ubot,utop,wbot,wtop)
+    subroutine update_ghost_wallsU(u,bctype_ubot,bctype_utop,bcval_ubot,bcval_utop)
         use parameters, only: Nx, Nz
+        use bctypes
         implicit none
-        real(8), intent(inout), dimension(halosize-1:Nx+halosize , halosize-1:Nz+halosize ) :: u,w
-        real(8) :: ubot, utop, wbot, wtop
+        real(8), intent(inout), dimension(halosize-1:Nx+halosize , halosize-1:Nz+halosize ) :: u
+        real(8) :: bcval_ubot, bcval_utop
+        integer, intent(in) :: bctype_ubot, bctype_utop
 
+        ! u Bottom wall
+        if (bctype_ubot .eq. DIRICHLET) then
+            u(:,1-halosize) = 2.0 * bcval_ubot - u(:,1)
+        endif
 
-        ! Bottom wall
-        u(:,1-halosize) = 2.0 * ubot - u(:,1)
-        w(:,1) = wbot ! ghost cell redundant w(:,1-halosize)
-
-        ! Top wall
-        u(:,Nz+halosize) = 2.0 * utop - u(:,Nz)
-        w(:,Nz+halosize) = wtop
+        ! u Top wall
+        if (bctype_utop .eq. DIRICHLET) then
+            u(:,Nz+halosize) = 2.0 * bcval_utop - u(:,Nz)
+        endif
 
         ! Periodicity in x
         u(1-halosize,:) = u(Nx,:)
         u(Nx+halosize,:) = u(1,:)
 
+    end subroutine update_ghost_wallsU
+
+
+    subroutine update_ghost_wallsW(w,bctype_wbot,bctype_wtop,bcval_wbot,bcval_wtop)
+        use parameters, only: Nx, Nz
+        use bctypes
+        implicit none
+        real(8), intent(inout), dimension(halosize-1:Nx+halosize , halosize-1:Nz+halosize ) :: w
+        real(8) ::  bcval_wbot, bcval_wtop
+        integer, intent(in) :: bctype_wbot, bctype_wtop
+
+        ! w Bottom wall
+        if (bctype_wbot .eq. DIRICHLET) then
+            w(:,1) = bcval_wbot ! ghost cell redundant w(:,1-halosize)
+        endif
+
+        ! w top wall
+        if (bctype_wtop .eq. DIRICHLET) then
+            w(:,Nz+halosize) = bcval_wtop
+        endif
+
+        ! Periodicity in x
+
         w(1-halosize,:) = w(Nx,:)
         w(Nx+halosize,:) = w(1,:)
 
-    end subroutine update_ghost_walls
+    end subroutine update_ghost_wallsW
 
-
-    subroutine update_ghost_wallTemp(temp,Tbot,Ttop)
+    subroutine update_ghost_wallTemp(temp,bctype_Tbot,bctype_Ttop,bcval_Tbot,bcval_Ttop)
         use parameters, only: Nx, Nz
+        use bctypes
         implicit none
         real(8), intent(inout), dimension(halosize-1:Nx+halosize , halosize-1:Nz+halosize ) :: temp
-        real(8) :: Tbot, Ttop
-
+        real(8) :: bcval_Tbot, bcval_Ttop
+        integer, intent(in) :: bctype_Tbot, bctype_Ttop
 
         ! Bottom wall
-        temp(:,1-halosize) = 2.0 * Tbot - temp(:,1)
+        if (bctype_Tbot .eq. DIRICHLET) then
+            temp(:,1-halosize) = 2.0 * bcval_Tbot - temp(:,1)
+        endif
 
         ! Top wall
-        temp(:,Nz+halosize) = 2.0 * Ttop - temp(:,Nz)
+        if (bctype_Ttop .eq. DIRICHLET) then
+            temp(:,Nz+halosize) = 2.0 * bcval_Ttop - temp(:,Nz)
+        endif
 
         ! Periodicity in x
         temp(1-halosize,:) = temp(Nx,:)

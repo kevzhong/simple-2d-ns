@@ -1,5 +1,7 @@
 !----- PARAMETERS: MODIFY TO CHANGE SIMULATION SETUP ----------------
 module parameters
+    use bctypes
+    use implicit_types
     implicit none
 
     ! Grid points
@@ -17,27 +19,38 @@ module parameters
     integer :: Nt = 400000 ! No. of timesteps
     real :: dt = 1.0e-4 ! Timestep
 
-    real :: nu = 1.0 / 10000.0
+
+    ! Flow parameters
+    real :: nu = 1.0 / 1000.0
     real :: mean_dpdx = 0.0
 
 
-    logical :: implicitmode = .true.
+    logical :: implicitmode = .false.
+    integer :: implicit_type = ADI ! ADI or HELMHOLTZ . Arbitrary/ignored if implicitmode = .false.
 
     ! Add-ons
     logical :: scalarmode = .true.
-
     real :: prandtl = 1.0
     real :: beta_gx = 0.0 ; real :: beta_gz = 1.0 ! buoyancy forcing
 
 
-    ! Wall boundary-conditions
-    real :: utop = 0.0
-    real :: ubot = 0.0
-    real :: wtop = 0.0
-    real :: wbot = 0.0
+    ! Wall boundary-conditions, DIRICHLET or NEUMANN(not implemented yet)
+
+    integer :: bctype_utop = DIRICHLET
+    integer :: bctype_ubot = DIRICHLET
+    integer :: bctype_wtop = DIRICHLET
+    integer :: bctype_wbot = DIRICHLET
+
+    real :: bcval_utop = 0.0
+    real :: bcval_ubot = 0.0
+    real :: bcval_wtop = 0.0
+    real :: bcval_wbot = 0.0
     
-    real :: Ttop = 0.0
-    real :: Tbot = 1.0
+    integer :: bctype_Ttop = DIRICHLET
+    integer :: bctype_Tbot = DIRICHLET
+
+    real :: bcval_Ttop = 0.0
+    real :: bcval_Tbot = 1.0
 
     ! Data writing
     integer :: traw = 2000
@@ -104,8 +117,8 @@ module fftMemory
     type(C_PTR) :: fftw_plan_bwd
     type(C_PTR) :: ptr1, ptr2, ptr3, ptr4
 
-    complex(C_DOUBLE_COMPLEX), pointer :: rhs_hat(:,:), pseudo_phat(:,:)
-    real(C_DOUBLE), pointer :: soln_poisson(:,:), rhs_poisson(:,:) ! Poisson equation
+    complex(C_DOUBLE_COMPLEX), pointer :: rhs_hat(:,:), soln_hh_hat(:,:)
+    real(C_DOUBLE), pointer :: soln_hh(:,:), rhs_poisson(:,:) ! Poisson equation
 
 end module fftMemory
 
@@ -119,7 +132,8 @@ module implicit
 
     ! RHS/solution buffers for TDM
     real, allocatable, dimension(:) :: tdm_rhsX1(:), tdm_rhsX2(:) ! Two buffers for two solves in Sherman--Morrison
-    real, allocatable, dimension(:) :: tdm_rhsZ(:)
+    real, allocatable, dimension(:) :: tdm_rhsZ_r(:), tdm_rhsZ_c
+
 
     ! Provisional solution array (delta u etc to pass in x->y->z)
     real, allocatable, dimension(:,:) :: impl_delta

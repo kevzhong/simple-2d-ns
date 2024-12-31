@@ -1,4 +1,4 @@
-! Solve for the provisional velocity ustar (or scalar at new time-step) using the alternating direction implicit (ADI) / approximate factorization method
+! Solve for the provisional velocity ustar (or scalar at new time-step) implicitly using the alternating direction implicit (ADI) / approximate factorization method
 subroutine ADI_implicitUpdate
     use parameters
     use velfields
@@ -15,17 +15,15 @@ subroutine ADI_implicitUpdate
     lapl_prefac = 0.5 * nu * dt / dx**2
     call ADI_periodicSolveX(lapl_prefac,rhs_u)
     lapl_prefac = 0.5 * nu * dt / dz**2
-    call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),u(1:Nx,1:Nz))
+    call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),u(1:Nx,1:Nz),bctype_ubot,bctype_utop)
+    call update_ghost_wallsU(u,bctype_ubot,bctype_utop,bcval_ubot,bcval_utop)
 
     !--------- w velocity --------------------------------------
     lapl_prefac = 0.5 * nu * dt / dx**2
     call ADI_periodicSolveX(lapl_prefac,rhs_w)
     lapl_prefac = 0.5 * nu * dt / dz**2
-    call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),w(1:Nx,1:Nz))
-    
-
-    
-    call update_ghost_walls(u,w,ubot,utop,wbot,wtop)
+    call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),w(1:Nx,1:Nz),bctype_wbot,bctype_wtop)
+    call update_ghost_wallsW(w,bctype_wbot,bctype_wtop,bcval_wbot,bcval_wtop)
 
 
     !--------- scalar -------------------------------------------
@@ -33,9 +31,9 @@ subroutine ADI_implicitUpdate
         lapl_prefac = 0.5 * nu/prandtl * dt / dx**2
         call ADI_periodicSolveX(lapl_prefac,rhs_temp)
         lapl_prefac = 0.5 * nu/prandtl * dt / dz**2
-        call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),temp(1:Nx,1:Nz))
+        call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),temp(1:Nx,1:Nz),bctype_Tbot,bctype_Ttop)
 
-        call update_ghost_wallTemp(temp,Tbot,Ttop)
+        call update_ghost_wallTemp(temp,bctype_Tbot,bctype_Ttop,bcval_Tbot,bcval_Ttop)
     endif
 
 end subroutine ADI_implicitUpdate
@@ -149,8 +147,9 @@ subroutine ADI_periodicSolveX(half_nudt_on_dx2,rhs)
 
 end subroutine ADI_periodicSolveX
 
-subroutine ADI_wallSolveZ(half_nudt_on_dz2,rhs,field)
+subroutine ADI_wallSolveZ(half_nudt_on_dz2,rhs,field,bc_type_bot,bc_type_top)
     use velfields
+    use bctypes
     use parameters
     use velMemory
     use ghost
@@ -159,11 +158,9 @@ subroutine ADI_wallSolveZ(half_nudt_on_dz2,rhs,field)
     integer :: i, k
     real, intent(in) :: half_nudt_on_dz2
     real, dimension(Nx,Nz), intent(in) :: rhs
-    !real, dimension(Nx,Nz) :: rhs
-
     real, dimension(Nx,Nz), intent(inout) :: field
-
-    real :: a,b,c,d, d_bc
+    integer :: bc_type_bot, bc_type_top
+    real :: a,b,c,d, d_bcb, d_bct
 
     a = -half_nudt_on_dz2 / (1.0 + 2.0 * half_nudt_on_dz2)
     b = 1.0
@@ -176,31 +173,40 @@ subroutine ADI_wallSolveZ(half_nudt_on_dz2,rhs,field)
         apk(k) = c
     enddo
 
-    ! Apply Dirichlet wall conditions
-    d_bc = 1.0 / (1.0 + 3.0 * half_nudt_on_dz2)
-    !ack(1) = 1.0
-    apk(1) = -half_nudt_on_dz2 * d_bc ! Bottom wall Dirichlet
-    amk(Nz-1) = -half_nudt_on_dz2 * d_bc ! Top wall Dirichlet
+    if (bc_type_bot .eq. DIRICHLET) then
+        d_bcb = 1.0 / (1.0 + 3.0 * half_nudt_on_dz2)
+        !ack(1) = 1.0
+        apk(1) = -half_nudt_on_dz2 * d_bcb ! Bottom wall Dirichlet
+    else
+        d_bcb = 1.0 / (1.0 + 3.0 * half_nudt_on_dz2) ! DUMMY TO AVOID WARNING
+    endif
+
+    if (bc_type_top .eq. DIRICHLET) then
+        d_bct = 1.0 / (1.0 + 3.0 * half_nudt_on_dz2)
+        amk(Nz-1) = -half_nudt_on_dz2 * d_bct ! Top wall Dirichlet
+    else
+        d_bct = 1.0 / (1.0 + 3.0 * half_nudt_on_dz2) ! DUMMY TO AVOID WARNING
+    endif
 
     !$omp parallel do &
     !$omp default(none) &
-    !$omp private(i,k,tdm_rhsZ) &
-    !$omp shared(Nx,Nz,half_nudt_on_dz2,d,rhs,field,amk,ack,apk,d_bc)
+    !$omp private(i,k,tdm_rhsZ_r) &
+    !$omp shared(Nx,Nz,half_nudt_on_dz2,d,rhs,field,amk,ack,apk,d_bcb,d_bct)
     do i = 1,Nx
         
         ! Reset RHS
         do k = 2,Nz-1
-            tdm_rhsZ(k) = rhs(i,k) * d
+            tdm_rhsZ_r(k) = rhs(i,k) * d
         enddo
         ! Boundary conditions
-        tdm_rhsZ(1) = ( rhs(i,1)  ) * d_bc
-        tdm_rhsZ(Nz) = ( rhs(i,Nz) ) * d_bc
+        tdm_rhsZ_r(1) = ( rhs(i,1)  ) * d_bcb
+        tdm_rhsZ_r(Nz) = ( rhs(i,Nz) ) * d_bct
 
 
-        call tridiag(amk,ack,apk,tdm_rhsZ,Nz) ! Step 1)
+        call tridiag(amk,ack,apk,tdm_rhsZ_r,Nz) ! Step 1)
 
         do k = 1,Nz
-            field(i,k) = field(i,k) + tdm_rhsZ(k)
+            field(i,k) = field(i,k) + tdm_rhsZ_r(k)
         enddo
 
     enddo

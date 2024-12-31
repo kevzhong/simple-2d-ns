@@ -21,10 +21,10 @@ subroutine init_fft
 
     ! Solution array real(Nx,Nz)
     ptr1 = fftw_alloc_real(int(Nx * Nz, C_SIZE_T))
-    call c_f_pointer(ptr1, soln_poisson, [Nx,Nz])
+    call c_f_pointer(ptr1, soln_hh, [Nx,Nz])
 
     ptr2 = fftw_alloc_complex(int((Nx/2+1) * Nz, C_SIZE_T))
-    call c_f_pointer(ptr2, pseudo_phat, [Nx/2+1,Nz])
+    call c_f_pointer(ptr2, soln_hh_hat, [Nx/2+1,Nz])
 
     ptr3 = fftw_alloc_complex(int((Nx/2+1) * Nz, C_SIZE_T))
     call c_f_pointer(ptr3, rhs_hat, [Nx/2+1,Nz])
@@ -36,7 +36,7 @@ subroutine init_fft
     fftw_plan_fwd = fftw_plan_dft_r2c_1d(Nx, rhs_poisson(:,1), rhs_hat(:,1), FFTW_ESTIMATE)
 
     ! 1D complex to real transform: complex(Nx/2+1, 1) ----> double(Nx,1)
-    fftw_plan_bwd = fftw_plan_dft_c2r_1d(Nx, rhs_hat(:,1), soln_poisson(:,1), FFTW_ESTIMATE)
+    fftw_plan_bwd = fftw_plan_dft_c2r_1d(Nx, rhs_hat(:,1), soln_hh(:,1), FFTW_ESTIMATE)
 
 
 end subroutine init_fft

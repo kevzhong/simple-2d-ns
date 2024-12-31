@@ -7,7 +7,6 @@ OUTDIR = outputdir
 TARGET = a.out
 
 FFLAGS = -O3 -fdefault-real-8 -fdefault-double-8 -fcheck=bounds -fallow-argument-mismatch -funroll-loops -std=f2008 -Wall -Wextra -Wpedantic -fopenmp -I$(OBJDIR) -J$(OBJDIR)
-#FFLAGS += -fconvert=big-endian # For dumping .vtk files, add -fconvert=big-endian 
 
 #----FFTW library------------------- (adjust prefix if needed)--------------
 # For personal Linux machine
@@ -29,14 +28,19 @@ SRC =	$(SRCDIR)/main.f90 \
 		$(SRCDIR)/grid.f90 \
 		$(SRCDIR)/init_FFT.f90 \
 		$(SRCDIR)/initialCondition.f90 \
+		$(SRCDIR)/updateFields.f90 \
+		$(SRCDIR)/fullyExplicit_update.f90 \
 		$(SRCDIR)/rhsVelocity.f90 \
 		$(SRCDIR)/rhsScalar.f90 \
-		$(SRCDIR)/adi/ADI_implicitUpdate.f90 \
+		$(SRCDIR)/ADI_implicitUpdate.f90 \
 		$(SRCDIR)/pressurePoisson.f90 \
+		$(SRCDIR)/helmholtz_implicitUpdate.f90 \
+		$(SRCDIR)/solve_helmholtz.f90 \
 		$(SRCDIR)/tridiag.f90 \
 		$(SRCDIR)/fileIO.f90 \
 
 MOD_FILES = $(SRCDIR)/my_fftw.f90 \
+			$(SRCDIR)/types.f90 \
 			$(SRCDIR)/params.f90 \
 			$(SRCDIR)/ghost.f90
 
@@ -57,9 +61,9 @@ $(OUTDIR):
 $(OBJDIR)/%.o: $(SRCDIR)/%.f90
 	$(FC) $(FFLAGS) -c $< -o $@
 
-# In src/adi/
-$(OBJDIR)/%.o: $(SRCDIR)/adi/%.f90
-	$(FC) $(FFLAGS) -c $< -o $@
+## In src/adi/
+#$(OBJDIR)/%.o: $(SRCDIR)/adi/%.f90
+#	$(FC) $(FFLAGS) -c $< -o $@
 
 # Linking the final executable
 $(TARGET): $(MOBJ) $(OBJ)

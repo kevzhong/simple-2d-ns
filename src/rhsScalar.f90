@@ -10,32 +10,6 @@ subroutine rhsScalar
     
 end subroutine rhsScalar
 
-! Calculate intermediate velocity field, ustar, to be used for fractional step
-subroutine update_scalar_fullyExplicit
-    use scalarfields
-    use scalarMemory
-    use parameters
-    use ghost
-    implicit none
-    integer :: i, k
-
-    !$omp parallel do &
-    !$omp default(none) &
-    !$omp private(i,k) &
-    !$omp shared(Nx,Nz) &
-    !$omp shared(temp,rhs_temp)
-    do k = 1,Nz
-        do i = 1, Nx
-            temp(i,k) = temp(i,k) + rhs_temp(i,k)
-        enddo
-    enddo
-    !$omp end parallel do
-
-
-    call update_ghost_wallTemp(temp,Tbot,Ttop)
-
-end subroutine update_scalar_fullyExplicit
-
 ! Build all RHS vectors for velocity in Explicit Euler manner
 subroutine build_rhsScalar
     use scalarfields

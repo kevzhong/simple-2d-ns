@@ -30,7 +30,8 @@ subroutine initialCondition
         enddo
     enddo
     !$omp end parallel do
-    call update_ghost_walls(u,w,ubot,utop,wbot,wtop)
+    call update_ghost_wallsU(u,bctype_ubot,bctype_utop,bcval_ubot,bcval_utop)
+    call update_ghost_wallsW(w,bctype_wbot,bctype_wtop,bcval_wbot,bcval_wtop)
     !call update_ghost_pressure(p)
 
     if (scalarmode .eqv. .true.) then
@@ -38,10 +39,10 @@ subroutine initialCondition
         !$omp parallel do &
         !$omp default(none) &
         !$omp private(eps,i,k) &
-        !$omp shared(temp,zm,Tbot,Lz,Ttop,Nx,Nz)
+        !$omp shared(temp,zm,bcval_Tbot,Lz,bcval_Ttop,Nx,Nz)
         do k = 1,Nz
             do i = 1,Nx
-                temp(i,k) = (Ttop - Tbot) / Lz * zm(k) + Tbot 
+                temp(i,k) = (bcval_Ttop - bcval_Tbot) / Lz * zm(k) + bcval_Tbot 
 
                 ! Super-impose perturbation
                 call random_number(eps)
@@ -50,7 +51,7 @@ subroutine initialCondition
     enddo
     !$omp end parallel do
 
-    call update_ghost_wallTemp(temp,Tbot,Ttop)
+    call update_ghost_wallTemp(temp,bctype_Tbot,bctype_Ttop,bcval_Tbot,bcval_Ttop)
     
     endif
 
