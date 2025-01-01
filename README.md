@@ -27,4 +27,5 @@ Fields are dumped as binary files. In the later branches, I have routines which 
 ## Acknowledgements
 
 * [Dr. Naoki Hori](https://naokihori.github.io/NaokiHori/) for his overall guidance in kick-starting this project
-* [A/Prof. Daniel Chung](https://people.eng.unimelb.edu.au/chungd1/), my PhD advisor for whom I have used his code as a reference for various intricacies related to incompressible Navier--Stokes solvers 
+* My PhD advisor [A/Prof. Daniel Chung](https://people.eng.unimelb.edu.au/chungd1/), of which I have used his code as a reference for various intricacies related to incompressible flow solvers
+* The contributors to [AFiD](https://github.com/chowland/AFiD-MuRPhFi), which I have also used as a reference
