@@ -40,6 +40,7 @@ module ghost
         ! w Bottom wall
         if (bctype_wbot .eq. DIRICHLET) then
             w(:,1) = bcval_wbot ! ghost cell redundant w(:,1-halosize)
+            w(:,1-halosize) = bcval_wbot ! test
         endif
 
         ! w top wall

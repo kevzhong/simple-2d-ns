@@ -12,6 +12,7 @@ subroutine pressurePoisson
     call update_ghost_pressure(pseudo_p)
     call projectionUpdate
 
+
 end subroutine pressurePoisson
 
 subroutine build_rhsPoisson
@@ -76,8 +77,8 @@ subroutine projectionUpdate
         !$omp shared(p,pseudo_p,dx,dz,Nx,Nz,dt,half_nualdt)
         do k = 1,Nz
             do i = 1,Nx
-                p(i,k) = p(i,k) + half_nualdt * ( ( pseudo_p(i-1,k) - 2.0 * pseudo_p(i,k) + pseudo_p(i+1,k) ) / dx &
-                                                + ( pseudo_p(i,k-1) - 2.0 * pseudo_p(i,k) + pseudo_p(i,k+1) ) / dz )
+                p(i,k) = p(i,k) - half_nualdt * ( ( pseudo_p(i-1,k) - 2.0 * pseudo_p(i,k) + pseudo_p(i+1,k) ) / dx**2 &
+                                                + ( pseudo_p(i,k-1) - 2.0 * pseudo_p(i,k) + pseudo_p(i,k+1) ) / dz**2 )
             enddo
         enddo
         !$omp end parallel do

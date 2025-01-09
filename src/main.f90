@@ -9,6 +9,7 @@ program main
     use grid
     use velfields
     use scalarfields
+    use velMemory
     implicit none
     integer :: i,nrk3
     real :: time
@@ -41,6 +42,13 @@ program main
             call pressurePoisson ! Build div(ustar), solve Poisson, projection update to n+1
             ! call check
             !write(*,*) maxval(temp(1:Nx,1:Nz))
+
+            ! call write2DField(u(1:Nx,1:Nz),Nx,Nz,dx,dz,'u',nrk3)
+            ! call write2DField(w(1:Nx,1:Nz),Nx,Nz,dx,dz,'w',nrk3)
+            ! call write2DField(temp(1:Nx,1:Nz),Nx,Nz,dx,dz,'c',nrk3)
+            ! call write2DField(expl_u(1:Nx,1:Nz),Nx,Nz,dx,dz,'explu',nrk3)
+            ! call write2DField(expl_w(1:Nx,1:Nz),Nx,Nz,dx,dz,'explw',nrk3)
+
         enddo
 
         call cpu_time(end_time)

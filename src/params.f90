@@ -16,8 +16,8 @@ module parameters
     !real :: Lz = 2.0 * 3.141592653589793
 
     ! Time-stepping
-    integer :: Nt = 400000 ! No. of timesteps
-    real :: dt = 1.0e-6 ! Timestep
+    integer :: Nt = 10000 ! No. of timesteps
+    real :: dt = 1.0e-4 ! Timestep
 
 
     ! Flow parameters
@@ -53,7 +53,7 @@ module parameters
     real :: bcval_Tbot = 1.0
 
     ! Data writing
-    integer :: traw = 2000
+    integer :: traw = 1000
 
 end module parameters
 
