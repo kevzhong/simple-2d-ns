@@ -5,11 +5,11 @@ module parameters
     implicit none
 
     ! Grid points
-    integer :: Nx = 256
+    integer :: Nx = 128
     integer :: Nz = 128
 
     ! Domain size
-    real :: Lx = 2.0
+    real :: Lx = 1.0
     real :: Lz = 1.0
     
     !real :: Lx = 2.0 * 3.141592653589793
@@ -21,11 +21,11 @@ module parameters
 
 
     ! Flow parameters
-    real :: nu = 1.0 / 1000.0
-    real :: mean_dpdx = 0.0
+    real :: nu = 1.0 / 1.0
+    real :: mean_dpdx = -1.0
 
 
-    logical :: implicitmode = .false.
+    logical :: implicitmode = .true.
     integer :: implicit_type = ADI ! ADI or HELMHOLTZ . Arbitrary/ignored if implicitmode = .false.
 
     ! Add-ons
