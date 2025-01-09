@@ -13,6 +13,6 @@ subroutine updateFields
             call helmholtz_implicitUpdate
         endif
     else
-        call fullyExplicit_update
+        !call fullyExplicit_update ! Deprecated for rk3 treatment
     endif
 end subroutine updateFields

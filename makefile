@@ -42,7 +42,8 @@ SRC =	$(SRCDIR)/main.f90 \
 MOD_FILES = $(SRCDIR)/my_fftw.f90 \
 			$(SRCDIR)/types.f90 \
 			$(SRCDIR)/params.f90 \
-			$(SRCDIR)/ghost.f90
+			$(SRCDIR)/rk3.f90 \
+			$(SRCDIR)/ghost.f90 \
 
 # Object files
 OBJ = $(addprefix $(OBJDIR)/, $(notdir $(SRC:.f90=.o)))

@@ -1,6 +1,7 @@
 
 subroutine helmholtz_implicitUpdate
     use parameters
+    use rk3
     use velfields
     use velMemory
     use scalarfields
@@ -16,7 +17,7 @@ subroutine helmholtz_implicitUpdate
 
 
     !--------- u velocity --------------------------------------
-    lapl_prefac =  0.5 * nu * dt 
+    lapl_prefac =  0.5 * nu * aldt 
     call solve_helmholtz(u(1:Nx,1:Nz), rhs_u, 1.0 , lapl_prefac, bctype_ubot, bctype_utop )
     call update_ghost_wallsU(u,bctype_ubot,bctype_utop,bcval_ubot,bcval_utop)
 
@@ -26,7 +27,7 @@ subroutine helmholtz_implicitUpdate
 
     !--------- scalar -------------------------------------------
     if (scalarmode .eqv. .true.) then
-        lapl_prefac = 0.5 * nu/prandtl * dt
+        lapl_prefac = 0.5 * nu/prandtl * aldt
         call solve_helmholtz(temp(1:Nx,1:Nz), rhs_temp, 1.0 , lapl_prefac, bctype_Tbot, bctype_Ttop )
         call update_ghost_wallTemp(temp,bctype_Tbot,bctype_Ttop,bcval_Tbot,bcval_Ttop)
     endif

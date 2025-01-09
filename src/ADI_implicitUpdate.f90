@@ -1,5 +1,6 @@
 ! Solve for the provisional velocity ustar (or scalar at new time-step) implicitly using the alternating direction implicit (ADI) / approximate factorization method
 subroutine ADI_implicitUpdate
+    use rk3
     use parameters
     use velfields
     use velMemory
@@ -12,25 +13,25 @@ subroutine ADI_implicitUpdate
     real :: lapl_prefac
 
     !--------- u velocity --------------------------------------
-    lapl_prefac = 0.5 * nu * dt / dx**2
+    lapl_prefac = 0.5 * nu * aldt / dx**2
     call ADI_periodicSolveX(lapl_prefac,rhs_u)
-    lapl_prefac = 0.5 * nu * dt / dz**2
+    lapl_prefac = 0.5 * nu * aldt / dz**2
     call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),u(1:Nx,1:Nz),bctype_ubot,bctype_utop)
     call update_ghost_wallsU(u,bctype_ubot,bctype_utop,bcval_ubot,bcval_utop)
 
     !--------- w velocity --------------------------------------
-    lapl_prefac = 0.5 * nu * dt / dx**2
+    lapl_prefac = 0.5 * nu * aldt / dx**2
     call ADI_periodicSolveX(lapl_prefac,rhs_w)
-    lapl_prefac = 0.5 * nu * dt / dz**2
+    lapl_prefac = 0.5 * nu * aldt / dz**2
     call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),w(1:Nx,1:Nz),bctype_wbot,bctype_wtop)
     call update_ghost_wallsW(w,bctype_wbot,bctype_wtop,bcval_wbot,bcval_wtop)
 
 
     !--------- scalar -------------------------------------------
     if (scalarmode .eqv. .true.) then
-        lapl_prefac = 0.5 * nu/prandtl * dt / dx**2
+        lapl_prefac = 0.5 * nu/prandtl * aldt / dx**2
         call ADI_periodicSolveX(lapl_prefac,rhs_temp)
-        lapl_prefac = 0.5 * nu/prandtl * dt / dz**2
+        lapl_prefac = 0.5 * nu/prandtl * aldt / dz**2
         call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),temp(1:Nx,1:Nz),bctype_Tbot,bctype_Ttop)
 
         call update_ghost_wallTemp(temp,bctype_Tbot,bctype_Ttop,bcval_Tbot,bcval_Ttop)
@@ -38,7 +39,7 @@ subroutine ADI_implicitUpdate
 
 end subroutine ADI_implicitUpdate
 
-subroutine ADI_periodicSolveX(half_nudt_on_dx2,rhs)
+subroutine ADI_periodicSolveX(half_nualdt_on_dx2,rhs)
     use velfields
     use parameters
     use velMemory
@@ -46,7 +47,7 @@ subroutine ADI_periodicSolveX(half_nudt_on_dx2,rhs)
     use implicit
     implicit none
     integer :: i, k
-    real, intent(in) :: half_nudt_on_dx2
+    real, intent(in) :: half_nualdt_on_dx2
     real, dimension(Nx,Nz), intent(in) :: rhs
     real :: a,b,c,d
 
@@ -71,19 +72,19 @@ subroutine ADI_periodicSolveX(half_nudt_on_dx2,rhs)
     !  [    1 + 2*G  ]  i-1      [     ]  i      [    1 + 2*G  ]  i+1      [    1 + 2*G  ]    i
 
 
-    ! Here, G := half_nudt_on_dx2 = nu * dt / (0.5 * dx^2)
+    ! Here, G := half_nualdt_on_dx2 = nu * dt / (0.5 * dx^2)
     !      du := ustar - u_n
 
-    a = -half_nudt_on_dx2 / (1.0 + 2.0 * half_nudt_on_dx2)
+    a = -half_nualdt_on_dx2 / (1.0 + 2.0 * half_nualdt_on_dx2)
     b = 1.0
     c = a
-    d = 1.0 / (1.0 + 2.0 * half_nudt_on_dx2) ! Normalisation factor for RHS
+    d = 1.0 / (1.0 + 2.0 * half_nualdt_on_dx2) ! Normalisation factor for RHS
 
 
     ! Coefficients with no normalisation
-    !a = -half_nudt_on_dx2
-    !b = 1.0 + 2.0 * half_nudt_on_dx2
-    !c = -half_nudt_on_dx2
+    !a = -half_nualdt_on_dx2
+    !b = 1.0 + 2.0 * half_nualdt_on_dx2
+    !c = -half_nualdt_on_dx2
     !d = 1.0
 
     ! Sherman--Morrison pseudo-code
@@ -147,7 +148,7 @@ subroutine ADI_periodicSolveX(half_nudt_on_dx2,rhs)
 
 end subroutine ADI_periodicSolveX
 
-subroutine ADI_wallSolveZ(half_nudt_on_dz2,rhs,field,bc_type_bot,bc_type_top)
+subroutine ADI_wallSolveZ(half_nualdt_on_dz2,rhs,field,bc_type_bot,bc_type_top)
     use velfields
     use bctypes
     use parameters
@@ -156,16 +157,16 @@ subroutine ADI_wallSolveZ(half_nudt_on_dz2,rhs,field,bc_type_bot,bc_type_top)
     use implicit
     implicit none
     integer :: i, k
-    real, intent(in) :: half_nudt_on_dz2
+    real, intent(in) :: half_nualdt_on_dz2
     real, dimension(Nx,Nz), intent(in) :: rhs
     real, dimension(Nx,Nz), intent(inout) :: field
     integer :: bc_type_bot, bc_type_top
     real :: a,b,c,d, d_bcb, d_bct
 
-    a = -half_nudt_on_dz2 / (1.0 + 2.0 * half_nudt_on_dz2)
+    a = -half_nualdt_on_dz2 / (1.0 + 2.0 * half_nualdt_on_dz2)
     b = 1.0
     c = a
-    d = 1.0 / (1.0 + 2.0 * half_nudt_on_dz2) ! Normalisation factor for RHS
+    d = 1.0 / (1.0 + 2.0 * half_nualdt_on_dz2) ! Normalisation factor for RHS
 
     do k = 1,Nz
         amk(k) = a
@@ -174,24 +175,24 @@ subroutine ADI_wallSolveZ(half_nudt_on_dz2,rhs,field,bc_type_bot,bc_type_top)
     enddo
 
     if (bc_type_bot .eq. DIRICHLET) then
-        d_bcb = 1.0 / (1.0 + 3.0 * half_nudt_on_dz2)
+        d_bcb = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2)
         !ack(1) = 1.0
-        apk(1) = -half_nudt_on_dz2 * d_bcb ! Bottom wall Dirichlet
+        apk(1) = -half_nualdt_on_dz2 * d_bcb ! Bottom wall Dirichlet
     else
-        d_bcb = 1.0 / (1.0 + 3.0 * half_nudt_on_dz2) ! DUMMY TO AVOID WARNING
+        d_bcb = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
     endif
 
     if (bc_type_top .eq. DIRICHLET) then
-        d_bct = 1.0 / (1.0 + 3.0 * half_nudt_on_dz2)
-        amk(Nz-1) = -half_nudt_on_dz2 * d_bct ! Top wall Dirichlet
+        d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2)
+        amk(Nz-1) = -half_nualdt_on_dz2 * d_bct ! Top wall Dirichlet
     else
-        d_bct = 1.0 / (1.0 + 3.0 * half_nudt_on_dz2) ! DUMMY TO AVOID WARNING
+        d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
     endif
 
     !$omp parallel do &
     !$omp default(none) &
     !$omp private(i,k,tdm_rhsZ_r) &
-    !$omp shared(Nx,Nz,half_nudt_on_dz2,d,rhs,field,amk,ack,apk,d_bcb,d_bct)
+    !$omp shared(Nx,Nz,d,rhs,field,amk,ack,apk,d_bcb,d_bct)
     do i = 1,Nx
         
         ! Reset RHS

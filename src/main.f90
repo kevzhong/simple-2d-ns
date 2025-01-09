@@ -3,13 +3,14 @@
 
 program main
     use parameters
+    use rk3
     use fftw3
     use omp_lib
     use grid
     use velfields
     use scalarfields
     implicit none
-    integer :: i
+    integer :: i,nrk3
     real :: time
   
     ! For timing
@@ -32,18 +33,21 @@ program main
 
     !--------- Begin time-marching ------------------
     do i = 1,nt
-
         call cpu_time(start_time)
 
-        call updateFields
-        
-        call pressurePoisson ! Build div(ustar), solve Poisson, projection update to n+1
-
-        ! call postpro
-        ! call check
-        time = time + dt
+        do nrk3 = 1,3
+            call next_rk3(nrk3)
+            call updateFields
+            call pressurePoisson ! Build div(ustar), solve Poisson, projection update to n+1
+            ! call check
+            !write(*,*) maxval(temp(1:Nx,1:Nz))
+        enddo
 
         call cpu_time(end_time)
+
+        ! call postpro
+
+        time = time + dt
 
         if ( mod(i,traw) .eq. 0 ) then
             write(*,*) "Timestep ", i," CPU-time per step = ", end_time - start_time
@@ -52,10 +56,7 @@ program main
             call write2DField(w(1:Nx,1:Nz),Nx,Nz,dx,dz,'w',i)
             !call write2DField(p(1:Nx,1:Nz),Nx,Nz,dx,dz,'p',i)
             if (scalarmode .eqv. .true.) call write2DField(temp(1:Nx,1:Nz),Nx,Nz,dx,dz,'c',i)
-
         endif
-
-
     enddo
     !--------- End time-marching -------------------
 

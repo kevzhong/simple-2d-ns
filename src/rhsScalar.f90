@@ -12,6 +12,7 @@ end subroutine rhsScalar
 
 ! Build all RHS vectors for velocity in Explicit Euler manner
 subroutine build_rhsScalar
+    use rk3
     use scalarfields
     use velfields
     use parameters
@@ -26,8 +27,8 @@ subroutine build_rhsScalar
     !$omp default(none) &
     !$omp private(i,k) &
     !$omp private(duTdx,dwTdz,kap_dd2_t) &
-    !$omp shared(Nx,Nz,dx,dz,nu,prandtl,dt) &
-    !$omp shared(u,w,temp,rhs_temp)
+    !$omp shared(Nx,Nz,dx,dz,nu,prandtl,aldt,gamdt,zetdt) &
+    !$omp shared(u,w,temp,rhs_temp,expl_c,expl_c_m1)
     do k = 1,Nz
         do i = 1,Nx
 
@@ -54,8 +55,10 @@ subroutine build_rhsScalar
 
             !--------------------- BUILD RHS -----------------------!
 
-            ! Explicit Euler
-            rhs_temp(i,k) =   dt * ( -(duTdx + dwTdz) + kap_dd2_t )
+            expl_c(i,k) =  -(duTdx + dwTdz)
+
+            rhs_temp(i,k) = gamdt*expl_c(i,k) + zetdt*expl_c_m1(i,k) & ! Explicit advection terms
+                           +aldt*kap_dd2_t
         enddo
     enddo
     !$omp end parallel do

@@ -7,17 +7,12 @@
 subroutine rhsVelocity
     implicit none
     call build_rhsVelocity
-
-    ! For later: e.g. RK3, terms are accumulated separately
-    !call advect_u
-    !call advect_w
-    !call gradp
-
 end subroutine rhsVelocity
 
 ! Build all RHS vectors for velocity
 subroutine build_rhsVelocity
     use velfields
+    use rk3
     use parameters
     use grid
     use velMemory
@@ -55,8 +50,8 @@ subroutine build_rhsVelocity
     !$omp default(none) &
     !$omp private(i,k) &
     !$omp private(duudx,duwdz,dwudx,dwwdz,nudd2_u,nudd2_w,dpdx,dpdz,Tu_interp,Tw_interp) &
-    !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx,scalarmode,beta_gx,beta_gz,dt) &
-    !$omp shared(u,w,p,temp,rhs_u,rhs_w)
+    !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx,scalarmode,beta_gx,beta_gz,gamdt,zetdt,aldt) &
+    !$omp shared(u,w,p,temp,rhs_u,rhs_w,expl_u,expl_w,expl_u_m1,expl_w_m1)
     do k = 1,Nz
         do i = 1,Nx
 
@@ -120,20 +115,28 @@ subroutine build_rhsVelocity
 
             !--------------------- BUILD RHS -----------------------!
 
-            ! Explicit Euler
-            rhs_u(i,k) =   dt * ( -(dpdx + duudx + duwdz) + nudd2_u - mean_dpdx )
-            rhs_w(i,k) =   dt * ( -(dpdz + dwudx + dwwdz) + nudd2_w )
+            expl_u(i,k) = -( duudx + duwdz)
+            expl_w(i,k) = -( dwudx + dwwdz)
 
             if (scalarmode .eqv. .true.) then
 
                 Tu_interp = 0.5 * ( temp(i-1,k) + temp(i,k) )
                 Tw_interp = 0.5 * ( temp(i,k-1) + temp(i,k) )
 
-                rhs_u(i,k) = rhs_u(i,k) + dt * ( beta_gx * Tu_interp )
-                rhs_w(i,k) = rhs_w(i,k) + dt * ( beta_gz * Tw_interp )
+                expl_u(i,k) = expl_u(i,k) + ( beta_gx * Tu_interp )
+                expl_w(i,k) = expl_w(i,k) + ( beta_gz * Tw_interp )
 
             endif
 
+            rhs_u(i,k) = gamdt*expl_u(i,k) + zetdt*expl_u_m1(i,k)  & ! Fully-explicit terms (advection + buoyancy)
+                        -aldt * dpdx  & ! Pressure gradient
+                        +aldt * nudd2_u & ! Diffusive term: explicit part
+                        -aldt * mean_dpdx ! Mean pressure gradient body forcing
+
+            rhs_w(i,k) = gamdt*expl_w(i,k) + zetdt*expl_w_m1(i,k)  & ! Fully-explicit terms (advection + buoyancy)
+                        -aldt * dpdz  & ! Pressure gradient
+                        +aldt * nudd2_w ! Diffusive term: explicit part
+ 
         enddo
     enddo
     !$omp end parallel do

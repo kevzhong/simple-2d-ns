@@ -5,11 +5,11 @@ module parameters
     implicit none
 
     ! Grid points
-    integer :: Nx = 256
+    integer :: Nx = 128
     integer :: Nz = 128
 
     ! Domain size
-    real :: Lx = 2.0
+    real :: Lx = 1.0
     real :: Lz = 1.0
     
     !real :: Lx = 2.0 * 3.141592653589793
@@ -17,7 +17,7 @@ module parameters
 
     ! Time-stepping
     integer :: Nt = 400000 ! No. of timesteps
-    real :: dt = 1.0e-4 ! Timestep
+    real :: dt = 1.0e-6 ! Timestep
 
 
     ! Flow parameters
@@ -25,8 +25,8 @@ module parameters
     real :: mean_dpdx = 0.0
 
 
-    logical :: implicitmode = .false.
-    integer :: implicit_type = ADI ! ADI or HELMHOLTZ . Arbitrary/ignored if implicitmode = .false.
+    logical :: implicitmode = .true.
+    integer :: implicit_type = HELMHOLTZ ! ADI or HELMHOLTZ . Arbitrary/ignored if implicitmode = .false.
 
     ! Add-ons
     logical :: scalarmode = .true.
@@ -97,13 +97,15 @@ module velMemory
 
     ! Work arrays for RHSs
     real, allocatable, dimension(:,:) :: rhs_u, rhs_w
-    !real, allocatable, dimension(:,:) :: adv_u, adv_w
+    real, allocatable, dimension(:,:) :: expl_u, expl_u_m1, expl_w, expl_w_m1
 end module velMemory
 
 module scalarMemory
     implicit none
     ! Work arrays for RHSs
     real, allocatable, dimension(:,:) :: rhs_temp
+    real, allocatable, dimension(:,:) :: expl_c, expl_c_m1
+
 end module scalarMemory
 
 ! Working memory for FFT / Poisson solver
