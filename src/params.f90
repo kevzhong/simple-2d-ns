@@ -21,12 +21,12 @@ module parameters
 
 
     ! Flow parameters
-    real :: nu = 1.0 / 1.0
-    real :: mean_dpdx = -1.0
+    real :: nu = 1.0 / 1000.0
+    real :: mean_dpdx = 0.0
 
 
     logical :: implicitmode = .true.
-    integer :: implicit_type = ADI ! ADI or HELMHOLTZ . Arbitrary/ignored if implicitmode = .false.
+    integer :: implicit_type = HELMHOLTZ ! ADI or HELMHOLTZ . Arbitrary/ignored if implicitmode = .false.
 
     ! Add-ons
     logical :: scalarmode = .true.
