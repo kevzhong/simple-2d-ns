@@ -13,27 +13,43 @@ subroutine ADI_implicitUpdate
     real :: lapl_prefac
 
     !--------- u velocity --------------------------------------
-    lapl_prefac = 0.5 * nu * aldt / dx**2
-    call ADI_periodicSolveX(lapl_prefac,rhs_u)
-    lapl_prefac = 0.5 * nu * aldt / dz**2
-    call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),u(1:Nx,1:Nz),bctype_ubot,bctype_utop)
+    if ( implicitXmode .eqv. .true. ) then
+        lapl_prefac = 0.5 * nu * aldt / dx**2
+        call ADI_periodicSolveX(lapl_prefac,rhs_u)
+        lapl_prefac = 0.5 * nu * aldt / dz**2
+        call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),u(1:Nx,1:Nz),bctype_ubot,bctype_utop)
+    else
+        lapl_prefac = 0.5 * nu * aldt / dz**2
+        call ADI_wallSolveZ(lapl_prefac,rhs_u(:,:),u(1:Nx,1:Nz),bctype_ubot,bctype_utop)
+    endif
+
     call update_ghost_wallsU(u,bctype_ubot,bctype_utop,bcval_ubot,bcval_utop)
 
     !--------- w velocity --------------------------------------
-    lapl_prefac = 0.5 * nu * aldt / dx**2
-    call ADI_periodicSolveX(lapl_prefac,rhs_w)
-    lapl_prefac = 0.5 * nu * aldt / dz**2
-    call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),w(1:Nx,1:Nz),bctype_wbot,bctype_wtop)
+    if ( implicitXmode .eqv. .true. ) then
+        lapl_prefac = 0.5 * nu * aldt / dx**2
+        call ADI_periodicSolveX(lapl_prefac,rhs_w)
+        lapl_prefac = 0.5 * nu * aldt / dz**2
+        call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),w(1:Nx,1:Nz),bctype_wbot,bctype_wtop)
+    else
+        lapl_prefac = 0.5 * nu * aldt / dz**2
+        call ADI_wallSolveZ(lapl_prefac,rhs_w(:,:),w(1:Nx,1:Nz),bctype_wbot,bctype_wtop)
+    endif
+
     call update_ghost_wallsW(w,bctype_wbot,bctype_wtop,bcval_wbot,bcval_wtop)
 
 
     !--------- scalar -------------------------------------------
     if (scalarmode .eqv. .true.) then
-        lapl_prefac = 0.5 * nu/prandtl * aldt / dx**2
-        call ADI_periodicSolveX(lapl_prefac,rhs_temp)
-        lapl_prefac = 0.5 * nu/prandtl * aldt / dz**2
-        call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),temp(1:Nx,1:Nz),bctype_Tbot,bctype_Ttop)
-
+        if ( implicitXmode .eqv. .true. ) then
+            lapl_prefac = 0.5 * nu/prandtl * aldt / dx**2
+            call ADI_periodicSolveX(lapl_prefac,rhs_temp)
+            lapl_prefac = 0.5 * nu/prandtl * aldt / dz**2
+            call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),temp(1:Nx,1:Nz),bctype_Tbot,bctype_Ttop)
+        else
+            lapl_prefac = 0.5 * nu/prandtl * aldt / dz**2
+            call ADI_wallSolveZ(lapl_prefac,rhs_temp(:,:),temp(1:Nx,1:Nz),bctype_Tbot,bctype_Ttop)
+        endif
         call update_ghost_wallTemp(temp,bctype_Tbot,bctype_Ttop,bcval_Tbot,bcval_Ttop)
     endif
 

@@ -50,7 +50,7 @@ subroutine build_rhsVelocity
     !$omp default(none) &
     !$omp private(i,k) &
     !$omp private(duudx,duwdz,dwudx,dwwdz,nudd2_u,nudd2_w,dpdx,dpdz,Tu_interp,Tw_interp) &
-    !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx,scalarmode,beta_gx,beta_gz,gamdt,zetdt,aldt) &
+    !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx,scalarmode,implicitXmode,beta_gx,beta_gz,gamdt,zetdt,aldt) &
     !$omp shared(u,w,p,temp,rhs_u,rhs_w,expl_u,expl_w,expl_u_m1,expl_w_m1)
     do k = 1,Nz
         do i = 1,Nx
@@ -77,8 +77,8 @@ subroutine build_rhsVelocity
 
 
             ! d2u / dxj2
-            nudd2_u = nu * (  ( u(i-1,k) -2.0*u(i,k) + u(i+1,k)  ) / dx**2  + &
-                              ( u(i,k-1) -2.0*u(i,k) + u(i,k+1)  ) / dz**2 )
+            nudd2_u = nu * ( u(i,k-1) -2.0*u(i,k) + u(i,k+1)  ) / dz**2 
+                              
 
             ! dp/dx | i+1/2
              dpdx = ( -p(i-1,k) + p(i,k) ) / dx
@@ -106,8 +106,7 @@ subroutine build_rhsVelocity
                     *(w(i,k)+w(i-1,k)))) / (4.0 * dx)
 
             ! d2w / dxj2
-            nudd2_w = nu  * (  ( w(i-1,k) -2.0*w(i,k) + w(i+1,k)  ) / dx**2  + &
-                               ( w(i,k-1) -2.0*w(i,k) + w(i,k+1)  ) / dz**2 )
+            nudd2_w = nu  * ( w(i,k-1) -2.0*w(i,k) + w(i,k+1)  ) / dz**2 
 
             ! dp/dz | k+1/2
             dpdz = ( -p(i,k-1) + p(i,k) ) / dz
@@ -117,6 +116,14 @@ subroutine build_rhsVelocity
 
             expl_u(i,k) = -( duudx + duwdz)
             expl_w(i,k) = -( dwudx + dwwdz)
+
+            if (implicitXmode .eqv. .true.) then
+                nudd2_u = nudd2_u + nu *   ( u(i-1,k) -2.0*u(i,k) + u(i+1,k)  ) / dx**2 
+                nudd2_w = nudd2_w + nu *   ( w(i-1,k) -2.0*w(i,k) + w(i+1,k)  ) / dx**2 
+            else
+                expl_u(i,k) = expl_u(i,k) + nu * ( u(i-1,k) -2.0*u(i,k) + u(i+1,k)  ) / dx**2
+                expl_w(i,k) = expl_w(i,k) + nu * ( w(i-1,k) -2.0*w(i,k) + w(i+1,k)  ) / dx**2 
+            endif
 
             if (scalarmode .eqv. .true.) then
 
@@ -130,12 +137,12 @@ subroutine build_rhsVelocity
 
             rhs_u(i,k) = gamdt*expl_u(i,k) + zetdt*expl_u_m1(i,k)  & ! Fully-explicit terms (advection + buoyancy)
                         -aldt * dpdx  & ! Pressure gradient
-                        +aldt * nudd2_u & ! Diffusive term: explicit part
+                        +aldt * nudd2_u & ! Diffusive term: semi-implicit part
                         -aldt * mean_dpdx ! Mean pressure gradient body forcing
 
             rhs_w(i,k) = gamdt*expl_w(i,k) + zetdt*expl_w_m1(i,k)  & ! Fully-explicit terms (advection + buoyancy)
                         -aldt * dpdz  & ! Pressure gradient
-                        +aldt * nudd2_w ! Diffusive term: explicit part
+                        +aldt * nudd2_w ! Diffusive term: semi-implicit part
 
         enddo
     enddo

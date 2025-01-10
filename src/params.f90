@@ -16,7 +16,7 @@ module parameters
     !real :: Lz = 2.0 * 3.141592653589793
 
     ! Time-stepping
-    integer :: Nt = 200000 ! No. of timesteps
+    integer :: Nt = 100000 ! No. of timesteps
     real :: dt = 1.0e-4 ! Timestep
 
 
@@ -25,8 +25,8 @@ module parameters
     real :: mean_dpdx = 0.0
 
 
-    logical :: implicitmode = .true.
-    integer :: implicit_type = ADI ! ADI or HELMHOLTZ . Arbitrary/ignored if implicitmode = .false.
+    logical :: implicitXmode = .false.
+    integer :: implicit_type = ADI ! ADI or HELMHOLTZ, ignored if implicitXmode is false
 
     ! Add-ons
     logical :: scalarmode = .true.

@@ -68,7 +68,7 @@ subroutine projectionUpdate
 
 
     ! Additional Laplacian contribution from implicit treatment
-    if (implicitmode .eqv. .true.) then
+    !if (implicitXmode .eqv. .true.) then
         half_nualdt = 0.5 * nu * aldt
 
         !$omp parallel do &
@@ -82,7 +82,7 @@ subroutine projectionUpdate
             enddo
         enddo
         !$omp end parallel do
-    endif
+    !endif
 
     call update_ghost_pressure(p)
 
