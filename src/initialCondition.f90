@@ -45,8 +45,8 @@ subroutine initialCondition
                 temp(i,k) = (bcval_Ttop - bcval_Tbot) / Lz * zm(k) + bcval_Tbot 
 
                 ! Super-impose perturbation
-                !call random_number(eps)
-                !temp(i,k) = temp(i,k) + 0.2 * (eps - 0.5)
+                call random_number(eps)
+                temp(i,k) = temp(i,k) + 0.2 * (eps - 0.5)
         enddo
     enddo
     !$omp end parallel do

@@ -136,7 +136,7 @@ subroutine build_rhsVelocity
             rhs_w(i,k) = gamdt*expl_w(i,k) + zetdt*expl_w_m1(i,k)  & ! Fully-explicit terms (advection + buoyancy)
                         -aldt * dpdz  & ! Pressure gradient
                         +aldt * nudd2_w ! Diffusive term: explicit part
- 
+
         enddo
     enddo
     !$omp end parallel do

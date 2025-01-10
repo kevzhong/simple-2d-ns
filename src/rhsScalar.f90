@@ -59,6 +59,7 @@ subroutine build_rhsScalar
 
             rhs_temp(i,k) = gamdt*expl_c(i,k) + zetdt*expl_c_m1(i,k) & ! Explicit advection terms
                            +aldt*kap_dd2_t
+
         enddo
     enddo
     !$omp end parallel do
