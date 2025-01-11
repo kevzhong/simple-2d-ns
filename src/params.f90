@@ -6,18 +6,18 @@ module parameters
     implicit none
 
     ! Grid points
-    integer :: Nx = 128
+    integer :: Nx = 256
     integer :: Nz = 128
 
     ! Domain size
-    real :: Lx = 1.0
+    real :: Lx = 2.0
     real :: Lz = 1.0
     
     !real :: Lx = 2.0 * 3.141592653589793
     !real :: Lz = 2.0 * 3.141592653589793
 
     ! Time-stepping
-    integer :: Nt = 100000 ! No. of timesteps
+    integer :: Nt = 400000 ! No. of timesteps
     real :: dt = 1.0e-4 ! Timestep
 
 
@@ -26,8 +26,8 @@ module parameters
     real :: mean_dpdx = 0.0
 
     ! Grid stretching
-    integer :: gridtype = UNIFORM
-    real :: str_coeff = 1.0
+    integer :: gridtype = TANH
+    real :: str_coeff = 2.0
 
     logical :: implicitXmode = .false.
     integer :: implicit_type = ADI ! ADI or HELMHOLTZ, ignored if implicitXmode is false

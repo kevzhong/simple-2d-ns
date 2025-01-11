@@ -36,6 +36,7 @@ subroutine solve_helmholtz(field,rhs,p,q,bc_type_bot,bc_type_top)
     real, intent(inout) :: field(Nx,Nz)
     real :: rhs(Nx,Nz)
     real :: p, q
+    real :: dzmh, dzph
     integer, intent(in) :: bc_type_bot, bc_type_top
 
 
@@ -52,24 +53,30 @@ subroutine solve_helmholtz(field,rhs,p,q,bc_type_bot,bc_type_top)
     enddo
     !$omp end parallel do
 
-    a = -q  / dz**2
-    c = -q  / dz**2
+    !a = -q  / dz**2
+    !c = -q  / dz**2
 
     !$omp parallel do &
     !$omp default(none) &
-    !$omp private(i,b,k,amk,ack,apk,tdm_rhsZ_r,tdm_rhsZ_c) &
+    !$omp private(i,b,k,amk,ack,apk,tdm_rhsZ_r,tdm_rhsZ_c,dzmh,dzph) &
     !$omp shared(p,q,a,c,lmb_x_on_dx2,rhs_hat,soln_hh_hat,dz,Nx,Nz,bc_type_bot,bc_type_top)
     do i = 1,Nx/2+1
 
-        b = p - q * ( lmb_x_on_dx2(i) - 2.0 / dz**2 )
+        !b = p - q * ( lmb_x_on_dx2(i) - 2.0 / dz**2 )
 
         do k = 1,Nz
 
             rhs_hat(i,k) = rhs_hat(i,k) / Nx
+            !amk(k) = a
+            !ack(k) = b
+            !apk(k) = c
 
-            amk(k) = a
-            ack(k) = b
-            apk(k) = c
+            dzmh = 0.5*( dz(k-1) + dz(k  ) )
+            dzph = 0.5*( dz(k  ) + dz(k+1) )
+
+            amk(k) = -q / (dz(k) * dzmh )
+            ack(k) = p - q * (lmb_x_on_dx2(i) - (dzmh + dzph) / ( dz(k) * dzmh * dzph )  )
+            apk(k) = -q / (dz(k) * dzph )
 
             tdm_rhsZ_r(k) = real(rhs_hat(i,k))
             tdm_rhsZ_c(k) = aimag(rhs_hat(i,k))

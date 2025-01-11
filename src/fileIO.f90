@@ -13,11 +13,71 @@ subroutine write2DField(array,Nx,Ny,dx,dy,fpref,it)
     write(10) array
     close(10)
 
-    call write_xdmf(fpref, it, Nx, Ny, dx, dy) ! Writing header for viewing in Paraview
+    call write_xdmf_uniform(fpref, it, Nx, Ny, dx, dy) ! Header, only for uniform grid
+    !call write_xdmf(fpref, it, Nx, Ny) ! Writing header for viewing in Paraview
+
 end subroutine write2DField
 
+
+! ! Write .xmf files to read binary dumps in Paraview
+! subroutine write_xdmf(fpref, it,nx, ny)
+!     implicit none
+!     character(len=50) :: filename  ! xdmf file name
+!     character(len=50) :: bfilename ! binary filename
+!     character(len=*) :: fpref
+!     integer :: it
+!     integer, intent(in)   :: nx, ny          
+
+!     character(len=32) :: nx_str, ny_str, nx_str_p1, ny_str_p1
+!     integer :: unit       
+
+!     write(nx_str, '(I0)') Nx
+!     write(ny_str, '(I0)') Ny
+!     write(nx_str_p1, '(I0)') Nx+1
+!     write(ny_str_p1, '(I0)') Ny+1
+
+
+!     write(filename, '("outputdir/",A, "_it", I0, ".xmf")') trim(fpref), it
+!     write(bfilename, '(A, "_it", I0, ".dat")') trim(fpref), it
+
+
+! ! Open the file
+!     open(newunit=unit, file=filename, status='replace', action='write')
+
+!     ! Write the XDMF header
+!     write(unit, '(A)') '<?xml version="1.0" ?>'
+!     write(unit, '(A)') '<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'
+!     write(unit, '(A)') '<Xdmf Version="2.0">'
+!     write(unit, '(A)') '  <Domain>'
+!     write(unit, '(A)') '    <Grid Name="StructuredGrid" GridType="Uniform">'
+!     write(unit, '(A)') '      <Topology TopologyType="3DRectMesh" NumberOfElements="' // &
+!                        trim(adjustl(ny_str_p1)) // ' 2 ' // &
+!                        trim(adjustl(nx_str_p1)) // '"/>'
+!     write(unit, '(A)') '      <Geometry GeometryType="VXVYVZ">'
+!     write(unit, '(A)') '        <DataItem Format="Binary" Endian="Little" DataType="Float" Precision="8" Dimensions="' // &
+!                        trim(adjustl(nx_str_p1)) // '">xm_grid.dat</DataItem>'
+!     write(unit, '(A)') '        <DataItem Format="Binary" Endian="Little" DataType="Float" Precision="8" Dimensions="' // &
+!                        trim(adjustl(ny_str_p1)) // '">zm_grid.dat</DataItem>'
+!     write(unit, '(A)') '      </Geometry>'
+    
+!     write(unit, '(A)') '      <Attribute Name="' // fpref // '" AttributeType="Scalar" Center="Cell">'
+!     write(unit, '(A)') '        <DataItem Format="Binary" Endian="Little" DataType="Float" Precision="8" Dimensions="' // &
+!                        trim(adjustl(ny_str)) // ' ' // &
+!                        trim(adjustl(nx_str)) // '">' // trim(adjustl(bfilename)) // '</DataItem>'
+!     write(unit, '(A)') '      </Attribute>'
+    
+!     write(unit, '(A)') '    </Grid>'
+!     write(unit, '(A)') '  </Domain>'
+!     write(unit, '(A)') '</Xdmf>'
+    
+!     ! Close the file
+!     close(unit)
+
+! end subroutine write_xdmf
+
+
 ! Write .xmf files to read binary dumps in Paraview
-subroutine write_xdmf(fpref, it,nx, ny, dx,dy)
+subroutine write_xdmf_uniform(fpref, it,nx, ny, dx,dy)
     implicit none
     character(len=50) :: filename  ! xdmf file name
     character(len=50) :: bfilename ! binary filename
@@ -67,35 +127,34 @@ subroutine write_xdmf(fpref, it,nx, ny, dx,dy)
     ! Close the file
     close(unit)
 
-end subroutine write_xdmf
+end subroutine write_xdmf_uniform
+
 
 subroutine write_grid
     use parameters
     use grid
     implicit none
-    real, allocatable :: dx_arr(:)
-    integer :: i
     character(len=50) :: filename 
 
     ! Write grid as binary file for viewing
 
-    ! Uniform x
-    allocate(dx_arr(1:Nx))
-    do i = 1,Nx
-        dx_arr(i) = dx
-    enddo
-
-    filename = trim(adjustl("outputdir/dx_grid.dat"))
-    open(unit=10, file=filename, status='replace', access='stream', action='write')
-    write(10) dx_arr
-    close(10)
-
+    !-------------------- GRID SPACINGS --------------------------------------------
     filename = trim(adjustl("outputdir/dz_grid.dat"))
     open(unit=15, file=filename, status='replace', access='stream', action='write')
     write(15) dz(1:Nz)
     close(15)
 
-    deallocate(dx_arr)
+
+    !----------------- CELL-CENTRE COORDINATES (FOR PARAVIEW) ----------------------
+    filename = trim(adjustl("outputdir/xm_grid.dat"))
+    open(unit=16, file=filename, status='replace', access='stream', action='write')
+    write(16) xm(1:Nx)
+    close(16)
+
+    filename = trim(adjustl("outputdir/zm_grid.dat"))
+    open(unit=17, file=filename, status='replace', access='stream', action='write')
+    write(17) zm(1:Nz)
+    close(17)
     
 end subroutine write_grid
 
@@ -166,3 +225,20 @@ end subroutine write_grid
 
 
 
+! <?xml version="1.0" ?>
+! <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+! <Xdmf Version="2.0">
+!   <Domain>
+!     <Grid Name="StructuredGrid" GridType="Uniform">
+!       <Topology TopologyType="3DRectMesh" NumberOfElements="129 2 257"/>
+!       <Geometry GeometryType="VXVYVZ">
+!         <DataItem Format="Binary" Endian="Little" DataType="Float" Precision="8" Dimensions="129">zm_grid.dat</DataItem>
+!         <DataItem Format="XML" Dimensions="2"> 0.0 0.01</DataItem>
+!         <DataItem Format="Binary" Endian="Little" DataType="Float" Precision="8" Dimensions="257">xm_grid.dat</DataItem>
+!       </Geometry>
+!       <Attribute Name="c" AttributeType="Scalar" Center="Cell">
+!         <DataItem Format="Binary" Endian="Little" DataType="Float" Precision="8" Dimensions="128 1 256">c_it1000.dat</DataItem>
+!       </Attribute>
+!     </Grid>
+!   </Domain>
+! </Xdmf>

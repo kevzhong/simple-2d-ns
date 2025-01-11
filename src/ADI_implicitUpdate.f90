@@ -16,11 +16,11 @@ subroutine ADI_implicitUpdate
     if ( implicitXmode .eqv. .true. ) then
         lapl_prefac = 0.5 * nu * aldt / dx**2
         call ADI_periodicSolveX(lapl_prefac,rhs_u)
-        lapl_prefac = 0.5 * nu * aldt / dz**2
-        call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),u(1:Nx,1:Nz),bctype_ubot,bctype_utop)
+        lapl_prefac = 0.5 * nu * aldt 
+        call implicit_wallSolve(lapl_prefac,impl_delta(:,:),u(1:Nx,1:Nz),bctype_ubot,bctype_utop)
     else
-        lapl_prefac = 0.5 * nu * aldt / dz**2
-        call ADI_wallSolveZ(lapl_prefac,rhs_u(:,:),u(1:Nx,1:Nz),bctype_ubot,bctype_utop)
+        lapl_prefac = 0.5 * nu * aldt 
+        call implicit_wallSolve(lapl_prefac,rhs_u(:,:),u(1:Nx,1:Nz),bctype_ubot,bctype_utop)
     endif
 
     call update_ghost_wallsU(u,bctype_ubot,bctype_utop,bcval_ubot,bcval_utop)
@@ -29,11 +29,11 @@ subroutine ADI_implicitUpdate
     if ( implicitXmode .eqv. .true. ) then
         lapl_prefac = 0.5 * nu * aldt / dx**2
         call ADI_periodicSolveX(lapl_prefac,rhs_w)
-        lapl_prefac = 0.5 * nu * aldt / dz**2
-        call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),w(1:Nx,1:Nz),bctype_wbot,bctype_wtop)
+        lapl_prefac = 0.5 * nu * aldt 
+        call implicit_wallSolve_W(lapl_prefac,impl_delta(:,:),w(1:Nx,1:Nz),bctype_wbot,bctype_wtop)
     else
-        lapl_prefac = 0.5 * nu * aldt / dz**2
-        call ADI_wallSolveZ(lapl_prefac,rhs_w(:,:),w(1:Nx,1:Nz),bctype_wbot,bctype_wtop)
+        lapl_prefac = 0.5 * nu * aldt 
+        call implicit_wallSolve_W(lapl_prefac,rhs_w(:,:),w(1:Nx,1:Nz),bctype_wbot,bctype_wtop)
     endif
 
     call update_ghost_wallsW(w,bctype_wbot,bctype_wtop,bcval_wbot,bcval_wtop)
@@ -44,11 +44,11 @@ subroutine ADI_implicitUpdate
         if ( implicitXmode .eqv. .true. ) then
             lapl_prefac = 0.5 * nu/prandtl * aldt / dx**2
             call ADI_periodicSolveX(lapl_prefac,rhs_temp)
-            lapl_prefac = 0.5 * nu/prandtl * aldt / dz**2
-            call ADI_wallSolveZ(lapl_prefac,impl_delta(:,:),temp(1:Nx,1:Nz),bctype_Tbot,bctype_Ttop)
+            lapl_prefac = 0.5 * nu/prandtl * aldt 
+            call implicit_wallSolve(lapl_prefac,impl_delta(:,:),temp(1:Nx,1:Nz),bctype_Tbot,bctype_Ttop)
         else
-            lapl_prefac = 0.5 * nu/prandtl * aldt / dz**2
-            call ADI_wallSolveZ(lapl_prefac,rhs_temp(:,:),temp(1:Nx,1:Nz),bctype_Tbot,bctype_Ttop)
+            lapl_prefac = 0.5 * nu/prandtl * aldt
+            call implicit_wallSolve(lapl_prefac,rhs_temp(:,:),temp(1:Nx,1:Nz),bctype_Tbot,bctype_Ttop)
         endif
         call update_ghost_wallTemp(temp,bctype_Tbot,bctype_Ttop,bcval_Tbot,bcval_Ttop)
     endif
@@ -164,9 +164,10 @@ subroutine ADI_periodicSolveX(half_nualdt_on_dx2,rhs)
 
 end subroutine ADI_periodicSolveX
 
-subroutine ADI_wallSolveZ(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
+subroutine implicit_wallSolve(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
     use velfields
     use bctypes
+    use grid
     use parameters
     use velMemory
     use ghost
@@ -179,31 +180,36 @@ subroutine ADI_wallSolveZ(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
     integer :: bc_type_bot, bc_type_top
     real :: a,b,c,d, d_bcb, d_bct
     real :: half_nualdt_on_dz2
+    real :: dzmh, dzph
 
 
     !a = -half_nualdt_on_dz2 / (1.0 + 2.0 * half_nualdt_on_dz2)
     !b = 1.0
     !c = a
-    d = 1.0 / (1.0 + 2.0 * half_nualdt_on_dz2) ! Normalisation factor for RHS
+    !d = 1.0 / (1.0 + 2.0 * half_nualdt_on_dz2) ! Normalisation factor for RHS
 
     do k = 1,Nz
-        half_nualdt_on_dz2 = half_nualdt / dz(k)**2
-        amk(k) = -half_nualdt_on_dz2 / (1.0 + 2.0 * half_nualdt_on_dz2)
-        ack(k) = 1.0
-        apk(k) = -half_nualdt_on_dz2 / (1.0 + 2.0 * half_nualdt_on_dz2)
+        dzmh = 0.5*( dz(k-1) + dz(k  ) )
+        dzph = 0.5*( dz(k  ) + dz(k+1) )
+
+        amk(k) = -half_nualdt / ( dz(k) * dzmh )
+        ack(k) = 1.0 + half_nualdt * (dzph + dzmh) / (dz(k) * dzph * dzmh )
+        apk(k) = -half_nualdt / ( dz(k) * dzph )
     enddo
 
     if (bc_type_bot .eq. DIRICHLET) then
-        d_bcb = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2)
-        !ack(1) = 1.0
-        apk(1) = -half_nualdt_on_dz2 * d_bcb ! Bottom wall Dirichlet
+        dzmh = 0.5*( dz(0) + dz(1) )
+        ack(1) = ack(1) + half_nualdt / ( dz(k) * dzmh )
+        !apk(1) = -half_nualdt_on_dz2 * d_bcb ! Bottom wall Dirichlet
     else
         d_bcb = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
     endif
 
     if (bc_type_top .eq. DIRICHLET) then
-        d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2)
-        amk(Nz-1) = -half_nualdt_on_dz2 * d_bct ! Top wall Dirichlet
+        dzph = 0.5*( dz(Nz  ) + dz(Nz+1) )
+        ack(Nz) = ack(Nz) + half_nualdt / ( dz(k) * dzph )
+        !d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2)
+        !amk(Nz-1) = -half_nualdt_on_dz2 * d_bct ! Top wall Dirichlet
     else
         d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
     endif
@@ -216,11 +222,11 @@ subroutine ADI_wallSolveZ(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
         
         ! Reset RHS
         do k = 2,Nz-1
-            tdm_rhsZ_r(k) = rhs(i,k) * d
+            tdm_rhsZ_r(k) = rhs(i,k) !* d
         enddo
         ! Boundary conditions
-        tdm_rhsZ_r(1) = ( rhs(i,1)  ) * d_bcb
-        tdm_rhsZ_r(Nz) = ( rhs(i,Nz) ) * d_bct
+        tdm_rhsZ_r(1) = ( rhs(i,1)  ) !* d_bcb
+        tdm_rhsZ_r(Nz) = ( rhs(i,Nz) ) !* d_bct
 
 
         call tridiag(amk,ack,apk,tdm_rhsZ_r,Nz) ! Step 1)
@@ -233,4 +239,82 @@ subroutine ADI_wallSolveZ(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
     !$omp end parallel do
 
 
-end subroutine ADI_wallSolveZ
+end subroutine implicit_wallSolve
+
+! Special change for the staggered w-grid
+subroutine implicit_wallSolve_W(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
+    use velfields
+    use bctypes
+    use grid
+    use parameters
+    use velMemory
+    use ghost
+    use implicit
+    implicit none
+    integer :: i, k
+    real, intent(in) :: half_nualdt
+    real, dimension(Nx,Nz), intent(in) :: rhs
+    real, dimension(Nx,Nz), intent(inout) :: field
+    integer :: bc_type_bot, bc_type_top
+    real :: a,b,c,d, d_bcb, d_bct
+    real :: half_nualdt_on_dz2
+    real :: dzmh, dzph
+
+
+    !a = -half_nualdt_on_dz2 / (1.0 + 2.0 * half_nualdt_on_dz2)
+    !b = 1.0
+    !c = a
+    !d = 1.0 / (1.0 + 2.0 * half_nualdt_on_dz2) ! Normalisation factor for RHS
+
+    do k = 1,Nz
+        dzmh = 0.5*( dz(k-1) + dz(k  ) )
+        dzph = 0.5*( dz(k  ) + dz(k+1) )
+
+        amk(k) = -half_nualdt / ( dz(k-1) * dzmh )
+        ack(k) = 1.0 + half_nualdt * (dz(k) + dz(k-1)) / (dz(k) * dz(k-1) * dzmh )
+        apk(k) = -half_nualdt / ( dz(k) * dzmh )
+    enddo
+
+    if (bc_type_bot .eq. DIRICHLET) then
+        dzmh = 0.5*( dz(0) + dz(1  ) )
+        ack(1) = ack(1) + half_nualdt / ( dz(k-1) * dzmh )
+        !apk(1) = -half_nualdt_on_dz2 * d_bcb ! Bottom wall Dirichlet
+    else
+        d_bcb = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
+    endif
+
+    if (bc_type_top .eq. DIRICHLET) then
+        dzmh = 0.5*( dz(Nz-1) + dz(Nz  ) )
+        ack(Nz) = ack(Nz) + half_nualdt / ( dz(k) * dzmh )
+        !d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2)
+        !amk(Nz-1) = -half_nualdt_on_dz2 * d_bct ! Top wall Dirichlet
+    else
+        d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
+    endif
+
+    !$omp parallel do &
+    !$omp default(none) &
+    !$omp private(i,k,tdm_rhsZ_r) &
+    !$omp shared(Nx,Nz,d,rhs,field,amk,ack,apk,d_bcb,d_bct)
+    do i = 1,Nx
+        
+        ! Reset RHS
+        do k = 2,Nz-1
+            tdm_rhsZ_r(k) = rhs(i,k) !* d
+        enddo
+        ! Boundary conditions
+        tdm_rhsZ_r(1) = ( rhs(i,1)  ) !* d_bcb
+        tdm_rhsZ_r(Nz) = ( rhs(i,Nz) ) !* d_bct
+
+
+        call tridiag(amk,ack,apk,tdm_rhsZ_r,Nz) ! Step 1)
+
+        do k = 1,Nz
+            field(i,k) = field(i,k) + tdm_rhsZ_r(k)
+        enddo
+
+    enddo
+    !$omp end parallel do
+
+
+end subroutine implicit_wallSolve_W
