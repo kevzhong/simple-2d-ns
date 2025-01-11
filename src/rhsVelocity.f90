@@ -21,6 +21,7 @@ subroutine build_rhsVelocity
     integer :: i, k
     real :: duudx, duwdz, dwudx, dwwdz, nudd2_u, nudd2_w, dpdx, dpdz
     real :: Tu_interp, Tw_interp
+    real :: dzph, dzmh
 
     ! Staggered grid arrangement, the stagger is by -1/2, index convention:
 
@@ -49,10 +50,12 @@ subroutine build_rhsVelocity
     !$omp parallel do &
     !$omp default(none) &
     !$omp private(i,k) &
-    !$omp private(duudx,duwdz,dwudx,dwwdz,nudd2_u,nudd2_w,dpdx,dpdz,Tu_interp,Tw_interp) &
+    !$omp private(dzmh,dzph,duudx,duwdz,dwudx,dwwdz,nudd2_u,nudd2_w,dpdx,dpdz,Tu_interp,Tw_interp) &
     !$omp shared(Nx,Nz,dx,dz,nu,mean_dpdx,scalarmode,implicitXmode,beta_gx,beta_gz,gamdt,zetdt,aldt) &
     !$omp shared(u,w,p,temp,rhs_u,rhs_w,expl_u,expl_w,expl_u_m1,expl_w_m1)
     do k = 1,Nz
+        dzmh = 0.5*( dz(k-1) + dz(k  ) )
+        dzph = 0.5*( dz(k  ) + dz(k+1) )
         do i = 1,Nx
 
             !--------------------- U VELOCITY -----------------------!
@@ -73,11 +76,12 @@ subroutine build_rhsVelocity
 
             duwdz = ( (w(i,k+1)+w(i-1,k+1))*(u(i,k+1)+u(i,k)) &
                     -(w(i,k)+w(i-1,k))*(u(i,k)+u(i,k-1)) &
-                     ) / (4.0 * dz)      
+                     ) / (4.0 * dz(k) )      
 
 
             ! d2u / dxj2
-            nudd2_u = nu * ( u(i,k-1) -2.0*u(i,k) + u(i,k+1)  ) / dz**2 
+            nudd2_u = nu  * (   ( u(i,k+1) - u(i,k  ) ) / dzph  - &
+                                ( u(i,k  ) - u(i,k-1) ) / dzmh   ) / dz(k)
                               
 
             ! dp/dx | i+1/2
@@ -90,26 +94,37 @@ subroutine build_rhsVelocity
             ! ----- |           =  ----   |   ww    -   ww   | 
             !  dz   |i, k+1/2       dz    [    k+1        k  ] 
 
-             dwwdz =( (w(i,k+1)+w(i,k)) &
-                     *(w(i,k+1)+w(i,k)) &
-                     -(w(i,k-1)+w(i,k)) &
-                     *(w(i,k-1)+w(i,k)) &
-                     ) / (4.0 * dz)
+            !  dwwdz =( (w(i,k+1)+w(i,k)) &
+            !          *(w(i,k+1)+w(i,k)) &
+            !          -(w(i,k-1)+w(i,k)) &
+            !          *(w(i,k-1)+w(i,k)) &
+            !          ) / (4.0 * dz)
+
+            dwwdz = 0.5*( dx*w(i,k) + dx*w(i,k+1) ) * 0.5 * ( w(i,k) + w(i,k+1) ) - & ! mww, k+1/2
+                    0.5*( dx*w(i,k) + dx*w(i,k-1) ) * 0.5 * ( w(i,k) + w(i,k-1) ) ! mww, k-1/2
+            
+            dwwdz = dwwdz / (dx * dzmh )
 
             ! d wu  |               1     [                  ]
             ! ----- |           =  ----   |   wu    -   wu   | 
             !  dx   |i, k+1/2       dx    [    k+1        k  ]
 
-            dwudx = ( ( (u(i+1,k)+u(i+1,k-1)) &
-                    *(w(i+1,k)+w(i,k))) &
-                    -((u(i,k)+u(i,k-1)) &
-                    *(w(i,k)+w(i-1,k)))) / (4.0 * dx)
+            ! dwudx = ( ( (u(i+1,k)+u(i+1,k-1)) &
+            !         *(w(i+1,k)+w(i,k))) &
+            !         -((u(i,k)+u(i,k-1)) &
+            !         *(w(i,k)+w(i-1,k)))) / (4.0 * dx)
 
+            dwudx = 0.5*( dz(k)*u(i+1,k) + dz(k-1)*u(i+1,k-1) ) * 0.5 * ( w(i,k) + w(i+1,k) ) - & ! muw, i+1/2
+                    0.5*( dz(k)*u(i  ,k) + dz(k-1)*u(i  ,k-1) ) * 0.5 * ( w(i,k) + w(i-1,k) )     ! muw, i-1/2
+
+            dwudx = dwudx / (dx * dzmh)
+                   
             ! d2w / dxj2
-            nudd2_w = nu  * ( w(i,k-1) -2.0*w(i,k) + w(i,k+1)  ) / dz**2 
+            nudd2_w = nu  * (   ( w(i,k+1) - w(i,k  ) ) / dz(k  )  - &
+                                ( w(i,k  ) - w(i,k-1) ) / dz(k-1)   ) / dzmh
 
             ! dp/dz | k+1/2
-            dpdz = ( -p(i,k-1) + p(i,k) ) / dz
+            dpdz = ( -p(i,k-1) + p(i,k) ) / dzmh
 
 
             !--------------------- BUILD RHS -----------------------!

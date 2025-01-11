@@ -10,3 +10,12 @@ module implicit_types
     integer, parameter :: ADI = 0
     integer, parameter :: HELMHOLTZ = 1
 end module implicit_types
+
+module gridtypes
+    implicit none
+    integer, parameter :: UNIFORM = 0
+    integer, parameter :: TANH = 1
+    integer, parameter :: COSINE = 2
+    integer, parameter :: ERF = 3
+
+end module gridtypes

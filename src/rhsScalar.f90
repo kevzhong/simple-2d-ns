@@ -21,15 +21,18 @@ subroutine build_rhsScalar
     implicit none
     integer :: i, k
     real :: duTdx,  dwTdz,  kap_dd2_t
+    real :: dzph, dzmh
 
 
     !$omp parallel do &
     !$omp default(none) &
     !$omp private(i,k) &
-    !$omp private(duTdx,dwTdz,kap_dd2_t) &
+    !$omp private(dzph,dzmh,duTdx,dwTdz,kap_dd2_t) &
     !$omp shared(Nx,Nz,dx,dz,nu,prandtl,aldt,gamdt,zetdt) &
     !$omp shared(u,w,temp,rhs_temp,implicitXmode,expl_c,expl_c_m1)
     do k = 1,Nz
+        dzmh = 0.5*( dz(k-1) + dz(k  ) )
+        dzph = 0.5*( dz(k  ) + dz(k+1) )
         do i = 1,Nx
 
 
@@ -46,11 +49,12 @@ subroutine build_rhsScalar
             !  dz   |i, k           dz    [    k+1/2        k-1/2  ] 
 
             dwTdz=( w(i,k+1)*(temp(i,k+1)+temp(i,k)) & 
-                -w(i,k)*(temp(i,k)+temp(i,k-1)) ) / (2.0 * dz)
+                -w(i,k)*(temp(i,k)+temp(i,k-1)) ) / (2.0 * dz(k) )
 
 
             ! d2T / dxj2
-            kap_dd2_t = nu/prandtl * ( temp(i,k-1) -2.0*temp(i,k) + temp(i,k+1)  ) / dz**2 
+            kap_dd2_t = nu/prandtl * (   ( temp(i,k+1) - temp(i,k  ) ) / dzph  - &
+                                         ( temp(i,k  ) - temp(i,k-1) ) / dzmh   ) / dz(k)
 
             !--------------------- BUILD RHS -----------------------!
 

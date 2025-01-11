@@ -23,10 +23,6 @@ subroutine allocFields
     ! RK3
     allocate( expl_u( 1:Nx , 1:Nz ) ) ; allocate( expl_u_m1( 1:Nx , 1:Nz ) ) 
     allocate( expl_w( 1:Nx , 1:Nz ) ) ; allocate( expl_w_m1( 1:Nx , 1:Nz ) ) 
-    expl_u(:,:) = 0.0
-    expl_u_m1(:,:) = 0.0
-    expl_w(:,:) = 0.0
-    expl_w_m1(:,:) = 0.0
 
     ! Implicit solver working memory
     allocate(ami( 1:Nx )) ; allocate(aci( 1:Nx )) ; allocate(api( 1:Nx ))
@@ -39,7 +35,6 @@ subroutine allocFields
         allocate( temp( -halosize+1:Nx+halosize , -halosize+1:Nz+halosize )  )
         allocate( rhs_temp( 1:Nx , 1:Nz )  )
         allocate( expl_c( 1:Nx , 1:Nz ) ) ; allocate( expl_c_m1( 1:Nx , 1:Nz ) ) 
-        expl_c(:,:) = 0.0 ; expl_c_m1(:,:) = 0.0
     endif
 
 end subroutine allocFields

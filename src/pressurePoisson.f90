@@ -6,6 +6,9 @@ subroutine pressurePoisson
     use bctypes
     implicit none
 
+    ! See section 3.4.1 of Kajishima & Taira (2016) for treatment of Poisson eqn. on staggered grids
+    ! with details on non-uniform grids too
+
     call build_rhsPoisson
     !call solve_pressurePoisson    
     call solve_helmholtz(pseudo_p(1:Nx,1:Nz), rhs_poisson, 0.0, -1.0, PRESSUREBC, PRESSUREBC )
@@ -33,7 +36,7 @@ subroutine build_rhsPoisson
     do k = 1,Nz
         do i = 1,Nx
             divu = ( u(i+1,k) - u(i,k) ) / dx + &
-                   ( w(i,k+1) - w(i,k) ) / dz 
+                   ( w(i,k+1) - w(i,k) ) / dz(k)
 
             rhs_poisson(i,k) = divu / aldt
         enddo
@@ -50,15 +53,17 @@ subroutine projectionUpdate
     implicit none
     integer :: i, k
     real :: half_nualdt
+    real :: dzmh
 
     !$omp parallel do &
     !$omp default(none) &
-    !$omp private(i,k) &
+    !$omp private(i,k,dzmh) &
     !$omp shared(u,w,p,pseudo_p,dx,dz,Nx,Nz,aldt)
     do k = 1,Nz
+        dzmh = 0.5*( dz(k-1) + dz(k  ) )
         do i = 1,Nx
             u(i,k) = u(i,k) - aldt * ( pseudo_p(i,k) - pseudo_p(i-1,k) ) / dx
-            w(i,k) = w(i,k) - aldt * ( pseudo_p(i,k) - pseudo_p(i,k-1) ) / dz
+            w(i,k) = w(i,k) - aldt * ( pseudo_p(i,k) - pseudo_p(i,k-1) ) / dzmh
 
             p(i,k) = p(i,k) + pseudo_p(i,k)
 
@@ -77,8 +82,14 @@ subroutine projectionUpdate
         !$omp shared(p,pseudo_p,dx,dz,Nx,Nz,dt,half_nualdt)
         do k = 1,Nz
             do i = 1,Nx
+                !p(i,k) = p(i,k) - half_nualdt * ( ( pseudo_p(i-1,k) - 2.0 * pseudo_p(i,k) + pseudo_p(i+1,k) ) / dx**2 &
+                !                                + ( pseudo_p(i,k-1) - 2.0 * pseudo_p(i,k) + pseudo_p(i,k+1) ) / dz**2 )
+
                 p(i,k) = p(i,k) - half_nualdt * ( ( pseudo_p(i-1,k) - 2.0 * pseudo_p(i,k) + pseudo_p(i+1,k) ) / dx**2 &
-                                                + ( pseudo_p(i,k-1) - 2.0 * pseudo_p(i,k) + pseudo_p(i,k+1) ) / dz**2 )
+                                                + (   &
+                                                      ( pseudo_p(i,k+1) - pseudo_p(i,k  ) ) / dzph  - &
+                                                      ( pseudo_p(i,k  ) - pseudo_p(i,k-1) ) / dzmh      ) / dz(k)  &
+                                                )
             enddo
         enddo
         !$omp end parallel do

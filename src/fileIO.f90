@@ -69,6 +69,36 @@ subroutine write_xdmf(fpref, it,nx, ny, dx,dy)
 
 end subroutine write_xdmf
 
+subroutine write_grid
+    use parameters
+    use grid
+    implicit none
+    real, allocatable :: dx_arr(:)
+    integer :: i
+    character(len=50) :: filename 
+
+    ! Write grid as binary file for viewing
+
+    ! Uniform x
+    allocate(dx_arr(1:Nx))
+    do i = 1,Nx
+        dx_arr(i) = dx
+    enddo
+
+    filename = trim(adjustl("outputdir/dx_grid.dat"))
+    open(unit=10, file=filename, status='replace', access='stream', action='write')
+    write(10) dx_arr
+    close(10)
+
+    filename = trim(adjustl("outputdir/dz_grid.dat"))
+    open(unit=15, file=filename, status='replace', access='stream', action='write')
+    write(15) dz(1:Nz)
+    close(15)
+
+    deallocate(dx_arr)
+    
+end subroutine write_grid
+
 
 
 ! subroutine writeVTK(array, Nx, Ny, dx, dy,fpref,it)

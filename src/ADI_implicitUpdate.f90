@@ -164,7 +164,7 @@ subroutine ADI_periodicSolveX(half_nualdt_on_dx2,rhs)
 
 end subroutine ADI_periodicSolveX
 
-subroutine ADI_wallSolveZ(half_nualdt_on_dz2,rhs,field,bc_type_bot,bc_type_top)
+subroutine ADI_wallSolveZ(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
     use velfields
     use bctypes
     use parameters
@@ -173,21 +173,24 @@ subroutine ADI_wallSolveZ(half_nualdt_on_dz2,rhs,field,bc_type_bot,bc_type_top)
     use implicit
     implicit none
     integer :: i, k
-    real, intent(in) :: half_nualdt_on_dz2
+    real, intent(in) :: half_nualdt
     real, dimension(Nx,Nz), intent(in) :: rhs
     real, dimension(Nx,Nz), intent(inout) :: field
     integer :: bc_type_bot, bc_type_top
     real :: a,b,c,d, d_bcb, d_bct
+    real :: half_nualdt_on_dz2
 
-    a = -half_nualdt_on_dz2 / (1.0 + 2.0 * half_nualdt_on_dz2)
-    b = 1.0
-    c = a
+
+    !a = -half_nualdt_on_dz2 / (1.0 + 2.0 * half_nualdt_on_dz2)
+    !b = 1.0
+    !c = a
     d = 1.0 / (1.0 + 2.0 * half_nualdt_on_dz2) ! Normalisation factor for RHS
 
     do k = 1,Nz
-        amk(k) = a
-        ack(k) = b
-        apk(k) = c
+        half_nualdt_on_dz2 = half_nualdt / dz(k)**2
+        amk(k) = -half_nualdt_on_dz2 / (1.0 + 2.0 * half_nualdt_on_dz2)
+        ack(k) = 1.0
+        apk(k) = -half_nualdt_on_dz2 / (1.0 + 2.0 * half_nualdt_on_dz2)
     enddo
 
     if (bc_type_bot .eq. DIRICHLET) then

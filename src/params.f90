@@ -2,6 +2,7 @@
 module parameters
     use bctypes
     use implicit_types
+    use gridtypes
     implicit none
 
     ! Grid points
@@ -24,6 +25,9 @@ module parameters
     real :: nu = 1.0 / 1000.0
     real :: mean_dpdx = 0.0
 
+    ! Grid stretching
+    integer :: gridtype = UNIFORM
+    real :: str_coeff = 1.0
 
     logical :: implicitXmode = .false.
     integer :: implicit_type = ADI ! ADI or HELMHOLTZ, ignored if implicitXmode is false
@@ -71,7 +75,8 @@ end module parameters
 module grid
     implicit none
 
-    real :: dx, dz
+    real :: dx
+    real, allocatable, dimension(:) :: dz
     real, allocatable, dimension(:) :: xc,xm
     real, allocatable, dimension(:) :: zc,zm
 
