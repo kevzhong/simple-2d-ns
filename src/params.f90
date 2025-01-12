@@ -17,7 +17,7 @@ module parameters
     !real :: Lz = 2.0 * 3.141592653589793
 
     ! Time-stepping
-    integer :: Nt = 400000 ! No. of timesteps
+    integer :: Nt = 200000 ! No. of timesteps
     real :: dt = 1.0e-4 ! Timestep
 
 

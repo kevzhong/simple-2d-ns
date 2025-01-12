@@ -52,10 +52,9 @@ program main
         if ( mod(i,traw) .eq. 0 ) then
             write(*,*) "Timestep ", i," CPU-time per step = ", end_time - start_time
 
-            call write2DField(u(1:Nx,1:Nz),Nx,Nz,dx,dz(1),'u',i)
-            call write2DField(w(1:Nx,1:Nz),Nx,Nz,dx,dz(1),'w',i)
-            !call write2DField(p(1:Nx,1:Nz),Nx,Nz,dx,dz,'p',i)
-            if (scalarmode .eqv. .true.) call write2DField(temp(1:Nx,1:Nz),Nx,Nz,dx,dz(1),'c',i)
+            call write2DField(u(1:Nx,1:Nz),Nx,Nz,'u',i)
+            call write2DField(w(1:Nx,1:Nz),Nx,Nz,'w',i)
+            if (scalarmode .eqv. .true.) call write2DField(temp(1:Nx,1:Nz),Nx,Nz,'c',i)
         endif
     enddo
     !--------- End time-marching -------------------
