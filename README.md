@@ -1,4 +1,4 @@
-# simple-2d-ns
+# HelloWorld-NavierStokes
 
 Hello World to incompressible Navier--Stokes. The basic features of this solver are:
 - Two-dimensional flow
