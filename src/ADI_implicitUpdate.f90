@@ -178,8 +178,7 @@ subroutine implicit_wallSolve(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
     real, dimension(Nx,Nz), intent(in) :: rhs
     real, dimension(Nx,Nz), intent(inout) :: field
     integer :: bc_type_bot, bc_type_top
-    real :: a,b,c,d, d_bcb, d_bct
-    real :: half_nualdt_on_dz2
+    !real :: a,b,c,d, d_bcb, d_bct
     real :: dzmh, dzph
 
 
@@ -202,7 +201,7 @@ subroutine implicit_wallSolve(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
         ack(1) = ack(1) + half_nualdt / ( dz(k) * dzmh )
         !apk(1) = -half_nualdt_on_dz2 * d_bcb ! Bottom wall Dirichlet
     else
-        d_bcb = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
+        ack(1) = 1.0 ! DUMMY TO AVOID WARNING
     endif
 
     if (bc_type_top .eq. DIRICHLET) then
@@ -211,13 +210,13 @@ subroutine implicit_wallSolve(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
         !d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2)
         !amk(Nz-1) = -half_nualdt_on_dz2 * d_bct ! Top wall Dirichlet
     else
-        d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
+        ack(Nz) = 1.0 ! DUMMY TO AVOID WARNING
     endif
 
     !$omp parallel do &
     !$omp default(none) &
     !$omp private(i,k,tdm_rhsZ_r) &
-    !$omp shared(Nx,Nz,d,rhs,field,amk,ack,apk,d_bcb,d_bct)
+    !$omp shared(Nx,Nz,rhs,field,amk,ack,apk)
     do i = 1,Nx
         
         ! Reset RHS
@@ -256,8 +255,7 @@ subroutine implicit_wallSolve_W(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
     real, dimension(Nx,Nz), intent(in) :: rhs
     real, dimension(Nx,Nz), intent(inout) :: field
     integer :: bc_type_bot, bc_type_top
-    real :: a,b,c,d, d_bcb, d_bct
-    real :: half_nualdt_on_dz2
+    !real :: a,b,c,d, d_bcb, d_bct
     real :: dzmh, dzph
 
 
@@ -280,7 +278,7 @@ subroutine implicit_wallSolve_W(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
         ack(1) = ack(1) + half_nualdt / ( dz(k-1) * dzmh )
         !apk(1) = -half_nualdt_on_dz2 * d_bcb ! Bottom wall Dirichlet
     else
-        d_bcb = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
+        ack(1) = 1.0 ! DUMMY TO AVOID WARNING
     endif
 
     if (bc_type_top .eq. DIRICHLET) then
@@ -289,13 +287,13 @@ subroutine implicit_wallSolve_W(half_nualdt,rhs,field,bc_type_bot,bc_type_top)
         !d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2)
         !amk(Nz-1) = -half_nualdt_on_dz2 * d_bct ! Top wall Dirichlet
     else
-        d_bct = 1.0 / (1.0 + 3.0 * half_nualdt_on_dz2) ! DUMMY TO AVOID WARNING
+        ack(Nz) = 1.0 ! DUMMY TO AVOID WARNING
     endif
 
     !$omp parallel do &
     !$omp default(none) &
     !$omp private(i,k,tdm_rhsZ_r) &
-    !$omp shared(Nx,Nz,d,rhs,field,amk,ack,apk,d_bcb,d_bct)
+    !$omp shared(Nx,Nz,rhs,field,amk,ack,apk)
     do i = 1,Nx
         
         ! Reset RHS

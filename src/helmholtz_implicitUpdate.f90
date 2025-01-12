@@ -20,7 +20,7 @@ subroutine helmholtz_implicitUpdate
         call update_ghost_wallsU(u,bctype_ubot,bctype_utop,bcval_ubot,bcval_utop)
 
         !--------- w velocity --------------------------------------
-        call solve_helmholtz(w(1:Nx,1:Nz), rhs_w, 1.0 , lapl_prefac, bctype_wbot, bctype_wtop )
+        call solve_helmholtzW(w(1:Nx,1:Nz), rhs_w, 1.0 , lapl_prefac, bctype_wbot, bctype_wtop )
         call update_ghost_wallsW(w,bctype_wbot,bctype_wtop,bcval_wbot,bcval_wtop)
 
         !--------- scalar -------------------------------------------

@@ -36,7 +36,13 @@ subroutine generate_grid
 
         case (TANH)
             call generate_tanh_grid(dz,zc,zm,   Nz,halosize,Lz,str_coeff)
-
+        
+        case (COSINE)
+            call generate_cosine_grid(dz,zc,zm,   Nz,halosize,Lz)
+        
+        case (ERF)
+            call generate_erf_grid(dz,zc,zm,   Nz,halosize,Lz,str_coeff)
+            
     end select
 
 
@@ -91,6 +97,72 @@ subroutine generate_tanh_grid(dz,zc,zm,   Nz,halosize,Lz,str_coeff)
     deallocate(z)
 
 end subroutine generate_tanh_grid
+
+subroutine generate_cosine_grid(dz,zc,zm,   Nz,halosize,Lz)
+    implicit none
+    integer :: i
+    integer, intent(in) :: Nz, halosize
+    real, intent(in) :: Lz
+    real, dimension(1-halosize:Nz+halosize), intent(inout) :: dz, zc, zm
+    real, allocatable :: z(:)
+    real(8) :: PI = 2.d0*dasin(1.d0) 
+
+    
+    allocate( z(1:(Nz+1)) )
+
+    do i = 1,Nz+1
+        z(i) = 0.5 * Lz * ( 1.0 - cos( (dble(i) - 1.0)*PI / dble(Nz) ) ) 
+    enddo
+
+
+
+    do i = 1,Nz
+        dz(i) = z(i+1) - z(i)
+        zc(i) = z(i)
+        zm(i) = 0.5 * ( z(i) + z(i+1)  )
+    enddo
+
+    ! Ghost-cell symmetric padding
+    dz(1-halosize) = dz(1) ; dz(Nz + halosize) = dz(Nz)
+    zc(1-halosize) = zc(1) - dz(1) ; zc(Nz + halosize) = zc(Nz) + dz(Nz)
+    zm(1-halosize) = zm(1) - dz(1) ; zm(Nz + halosize) = zm(Nz) + dz(Nz)
+
+    deallocate(z)
+
+end subroutine generate_cosine_grid
+
+subroutine generate_erf_grid(dz,zc,zm,   Nz,halosize,Lz,str_coeff)
+    implicit none
+    integer :: i
+    integer, intent(in) :: Nz, halosize
+    real, intent(in) :: Lz, str_coeff
+    real, dimension(1-halosize:Nz+halosize), intent(inout) :: dz, zc, zm
+    real, allocatable :: z(:)
+    real :: ii
+    
+    allocate( z(1:(Nz+1)) )
+
+    do i = 0,Nz
+        ii = dble(i) / dble(Nz)
+        z(i+1) = 0.5 * Lz * (1.0 + erf(str_coeff*(ii - 0.5 ) ) / erf(0.5*str_coeff) )
+    enddo
+
+
+
+    do i = 1,Nz
+        dz(i) = z(i+1) - z(i)
+        zc(i) = z(i)
+        zm(i) = 0.5 * ( z(i) + z(i+1)  )
+    enddo
+
+    ! Ghost-cell symmetric padding
+    dz(1-halosize) = dz(1) ; dz(Nz + halosize) = dz(Nz)
+    zc(1-halosize) = zc(1) - dz(1) ; zc(Nz + halosize) = zc(Nz) + dz(Nz)
+    zm(1-halosize) = zm(1) - dz(1) ; zm(Nz + halosize) = zm(Nz) + dz(Nz)
+
+    deallocate(z)
+
+end subroutine generate_erf_grid
 
 
 subroutine dealloc_grid

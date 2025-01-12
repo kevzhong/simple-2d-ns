@@ -22,15 +22,16 @@ module parameters
 
 
     ! Flow parameters
-    real :: nu = 1.0 / 1000.0
+    real :: nu = 1.0 / 10000.0
     real :: mean_dpdx = 0.0
 
     ! Grid stretching
-    integer :: gridtype = TANH
+    ! UNIFORM , TANH, COSINE, ERF
+    integer :: gridtype = ERF
     real :: str_coeff = 2.0
 
     logical :: implicitXmode = .false.
-    integer :: implicit_type = ADI ! ADI or HELMHOLTZ, ignored if implicitXmode is false
+    integer :: implicit_type = HELMHOLTZ ! ADI or HELMHOLTZ, ignored if implicitXmode is false
 
     ! Add-ons
     logical :: scalarmode = .true.
