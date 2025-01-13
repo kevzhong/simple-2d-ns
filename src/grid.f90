@@ -2,7 +2,7 @@
 ! Cell centres: xm, cell edges: xc
 
 subroutine generate_grid
-    use parameters, only: Lx, Lz, Nx, Nz, gridtype, str_coeff
+    use parameters, only: Lx, Ly, Lz, Nx, Ny, Nz, gridtype, str_coeff
     use grid
     use ghost, only: halosize
     use gridtypes
@@ -11,12 +11,16 @@ subroutine generate_grid
 
     ! Grid spacing
     dx = Lx / dble(Nx)
+    dy = Ly / dble(Ny)
 
 
     ! Allocate memory for spatial locations
 
     allocate( xc( -halosize+1:Nx+halosize  )  )
     allocate( xm( -halosize+1:Nx+halosize  )  )
+
+    allocate( yc( -halosize+1:Ny+halosize  )  )
+    allocate( ym( -halosize+1:Ny+halosize  )  )
 
     allocate( zc( -halosize+1:Nz+halosize  )  )
     allocate( zm( -halosize+1:Nz+halosize  )  )
@@ -26,6 +30,12 @@ subroutine generate_grid
     do i = -halosize+1,Nx+halosize
         xc(i) = dble(i - 1) * dx
         xm(i) = ( dble(i-1) + 0.5 ) * dx
+    enddo
+
+    ! y always uniform
+    do i = -halosize+1,Ny+halosize
+        yc(i) = dble(i - 1) * dy
+        ym(i) = ( dble(i-1) + 0.5 ) * dy
     enddo
 
     !------------ Wall-normal grid ------------------------------
@@ -170,6 +180,9 @@ subroutine dealloc_grid
 
     if(allocated(xc)) deallocate(xc)
     if(allocated(xm)) deallocate(xm)
+
+    if(allocated(yc)) deallocate(yc)
+    if(allocated(ym)) deallocate(ym)
 
     if(allocated(zc)) deallocate(zc)
     if(allocated(zm)) deallocate(zm)

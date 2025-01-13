@@ -96,6 +96,11 @@ subroutine write_grid
     write(16) xm(1:Nx)
     close(16)
 
+    filename = trim(adjustl("outputdir/ym_grid.dat"))
+    open(unit=15, file=filename, status='replace', access='stream', action='write')
+    write(15) ym(1:Ny)
+    close(15)
+
     filename = trim(adjustl("outputdir/zm_grid.dat"))
     open(unit=17, file=filename, status='replace', access='stream', action='write')
     write(17) zm(1:Nz)
