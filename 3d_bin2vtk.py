@@ -4,27 +4,29 @@ import numpy as np
 from vtk import vtkXMLRectilinearGridWriter, vtkRectilinearGrid, vtkFloatArray
 from vtk.util.numpy_support import numpy_to_vtk
 
-tstart = 1000
-tend = 200000
+tstart = 200
+tend = 400
 
-tskip = 1000
+tskip = 200
 
 #fields = ['c','u','w']
 fields = ['c']
 
 x_coords = np.fromfile("outputdir/xm_grid.dat")
-y_coords = np.fromfile("outputdir/zm_grid.dat")
-z_coords = np.zeros_like(x_coords, dtype=np.float32)  # 2D grid
+y_coords = np.fromfile("outputdir/ym_grid.dat")
+z_coords = np.fromfile("outputdir/zm_grid.dat")
 
 x_coords = np.float32(x_coords)
 y_coords = np.float32(y_coords)
+z_coords = np.float32(z_coords)
 
 Nx = x_coords.size
 Ny = y_coords.size
+Nz = z_coords.size
 
 # Create the rectilinear grid
 grid = vtkRectilinearGrid()
-grid.SetDimensions(Nx, Ny, 1)  # 1 slice in Z-direction
+grid.SetDimensions(Nx, Ny, Nz)  
 
 # Convert the coordinate arrays to VTK format
 x_vtk = numpy_to_vtk(x_coords)
@@ -47,7 +49,7 @@ for fpref in fields:
         field_fname = f"outputdir/{fpref}_it{nt}.dat"
         vtr_fname = f"outputdir/{fpref}_it{nt}.vtr"
 
-        field_data = np.fromfile(field_fname, dtype=np.float64).reshape(Nx, Ny, order='F')
+        field_data = np.fromfile(field_fname, dtype=np.float64).reshape(Nx, Ny, Nz, order='F')
         field_data = np.float32(field_data)
 
         field_vtk = numpy_to_vtk(field_data.ravel(order='F'))

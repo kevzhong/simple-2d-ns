@@ -1,3 +1,43 @@
+subroutine write3DField(array,Nx,Ny,Nz,fpref,it)
+    ! Write array(Nx,Ny) field as binary data
+    implicit none
+    integer :: Nx, Ny, Nz
+    !real(8), intent(in) :: dx, dy   ! Grid spacing: (dx, dy)
+    character(len=50) :: filename 
+    real, dimension(Nx,Ny,Nz) :: array
+    integer :: it
+    character(len=*) :: fpref
+
+    write(filename, '("outputdir/",A, "_it", I0, ".dat")') trim(fpref), it
+    open(unit=10, file=filename, status='replace', access='stream', action='write')
+    write(10) array
+    close(10)
+
+    !call write_xdmf_uniform(fpref, it, Nx, Ny, dx, dy) ! Header, only for uniform grid
+    !call write_xdmf(fpref, it, Nx, Ny) ! Writing header for viewing in Paraview
+
+end subroutine write3DField
+
+subroutine read3DField(array,Nx,Ny,Nz,fpref,nt0)
+    ! Write array(Nx,Ny) field as binary data
+    implicit none
+    integer :: Nx, Ny, Nz
+    !real(8), intent(in) :: dx, dy   ! Grid spacing: (dx, dy)
+    character(len=50) :: filename 
+    real, dimension(Nx,Ny,Nz) :: array
+    integer :: nt0
+    character(len=*) :: fpref
+
+    write(filename, '("outputdir/",A, "_it", I0, ".dat")') trim(fpref), nt0
+    open(unit=10, file=filename, status='old', access='stream', action='read')
+    read(10) array
+    close(10)
+
+    !call write_xdmf_uniform(fpref, it, Nx, Ny, dx, dy) ! Header, only for uniform grid
+    !call write_xdmf(fpref, it, Nx, Ny) ! Writing header for viewing in Paraview
+
+end subroutine read3DField
+
 subroutine write2DField(array,Nx,Ny,fpref,it)
     ! Write array(Nx,Ny) field as binary data
     implicit none

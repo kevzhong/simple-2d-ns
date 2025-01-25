@@ -26,6 +26,7 @@ LIBS = -L$(FFTW_PREFIX)/lib  -lfftw3_omp -lfftw3 -lm
 SRC =	$(SRCDIR)/main.f90 \
 		$(SRCDIR)/memAlloc.f90 \
 		$(SRCDIR)/grid.f90 \
+		$(SRCDIR)/dt.f90 \
 		$(SRCDIR)/init_FFT.f90 \
 		$(SRCDIR)/initialCondition.f90 \
 		$(SRCDIR)/updateFields.f90 \

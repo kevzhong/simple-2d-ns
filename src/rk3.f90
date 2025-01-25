@@ -16,7 +16,9 @@ module rk3
         implicit none
         integer, intent(in) :: substep
 
-        aldt = al_coeff(substep)*dt ; zetdt = zet_coeff(substep)*dt ; gamdt = gam_coeff(substep)*dt
+        aldt  = al_coeff(substep)  *dt 
+        zetdt = zet_coeff(substep) *dt
+        gamdt = gam_coeff(substep) *dt
         
         call rk3_memSwap(expl_u, expl_u_m1)
         call rk3_memSwap(expl_v, expl_v_m1)

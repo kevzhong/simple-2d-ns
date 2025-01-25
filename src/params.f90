@@ -6,31 +6,36 @@ module parameters
     implicit none
 
     ! Grid points
-    integer :: Nx = 256
+    integer :: Nx = 128
     integer :: Ny = 128
     integer :: Nz = 128
 
     ! Domain size
-    real :: Lx = 2.0
+    real :: Lx = 1.0
     real :: Ly = 1.0
     real :: Lz = 1.0
     
     !real :: Lx = 2.0 * 3.141592653589793
-    !real :: Lz = 2.0 * 3.141592653589793
+    !real :: Ly = 1.0 * 3.141592653589793
+    !real :: Lz = 2.0
 
-    ! Time-stepping
-    integer :: Nt = 200000 ! No. of timesteps
+    ! Time-stepping: Nt0, Nt can be optionally specified as command-line arguments
+    integer :: Nt0 = 0 ! 0 for initial condition, /=0 for restart
+    integer :: Nt = 10 ! No. of timesteps
     real :: dt = 1.0e-4 ! Timestep
+    
+    logical :: cflmode = .true.
+    real :: want_cfl = 0.5
 
 
     ! Flow parameters
-    real :: nu = 1.0 / 10000.0
+    real :: nu = 1.0 / 1000.0
     real :: mean_dpdx = 0.0
 
     ! Grid stretching
     ! UNIFORM , TANH, COSINE, ERF
-    integer :: gridtype = ERF
-    real :: str_coeff = 2.0
+    integer :: gridtype = TANH
+    real :: str_coeff = 2.2
 
     logical :: implicitXYmode = .false.
     integer :: implicit_type = HELMHOLTZ ! ADI or HELMHOLTZ, ignored if implicitXYmode is false
@@ -64,7 +69,7 @@ module parameters
     real :: bcval_Tbot = 1.0
 
     ! Data writing
-    integer :: traw = 1000
+    integer :: tframe2d = 100
 
 end module parameters
 
